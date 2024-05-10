@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image,TextInput, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image,TextInput, FlatList , ActivityIndicator} from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import {
   Card,
@@ -10,8 +10,34 @@ import {
   CardTitle,
 } from "../src/components/card";
 import tailwind from "twrnc";
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
+  const [newsData, setNewsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    // Fetch data from the API endpoint
+    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTUzNTIxMDYsImV4cCI6MTcxNTM1NTcwNiwibmJmIjoxNzE1MzUyMTA2LCJqdGkiOiJIVHBwM1ljMU5PVmE1UkxzIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.RbinstgSrzu2Y_9srNsX5lYSJ4RhXMxan0Q4qtSxc3k';
+
+    // Konfigurasi header dengan bearer token
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json' // Jika diperlukan
+    };
+
+    axios.get('http://10.0.2.2:8000/api/news', { headers })
+      .then(response => {
+        const data = response.data;
+        // console.log(data.data);
+        setNewsData(data.data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        setLoading(false);
+      });
+  }, []);
 
   const [images, setImages] = useState([
     { title: 'Baca', uri: 'https://source.unsplash.com/random/1' },
@@ -82,6 +108,7 @@ const HomeScreen = () => {
             <Text style={styles.buttonText}>Info</Text>
           </TouchableOpacity>
         </View>
+        {/* Berita */}
         <View>
           <Text style={styles.text}>Berita!</Text>
         </View>
@@ -90,10 +117,11 @@ const HomeScreen = () => {
           contentContainerStyle={styles.scrollViewContainer}
           showsHorizontalScrollIndicator={false}
         >
-          <CardBerita/>
-          <CardBerita/>
-          <CardBerita/>
+          {/* Menggunakan CardBerita dengan props newsData */}
+          <CardBerita newsData={newsData} />
         </ScrollView>
+        {/* End Berita */}
+        {/* Acara */}
         <View>
           <Text style={styles.text}>Acara!</Text>
         </View>
@@ -106,6 +134,8 @@ const HomeScreen = () => {
           <CardAcara/>
           <CardAcara/>
         </ScrollView>
+        {/* End Acara */}
+        {/* Rilis */}
         <View>
           <Text style={styles.text}>Rilis</Text>
         </View>
@@ -118,24 +148,38 @@ const HomeScreen = () => {
           <CardRilis/>
           <CardRilis/>
         </ScrollView>
+        {/* End Rilis */}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const CardBerita = () => {
+const CardBerita = ({ newsData }) => {
+  const navigation = useNavigation();
+
+  const onPressBerita = (uuid) => {
+    navigation.navigate('ArticleScreen', { uuid });
+  };
+
   return (
-    <Card style={[tailwind`m-1`, styles.card]}>
-      <TouchableOpacity onPress={() => console.log('Berita Card')}>
-        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
-        <CardContent style={tailwind`gap-1`}>
-          <CardTitle>This is a card</CardTitle>
-          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
-        </CardContent>
-      </TouchableOpacity>
-    </Card>
+    <View style={{ flexDirection: 'row' }}>
+      {newsData.map((newsItem, index) => (
+        <TouchableOpacity key={index}  onPress={() => onPressBerita(newsItem.id)}>
+          <Card style={styles.card}>
+            <CardImage source={{ uri: newsItem.image_url }} />
+            <CardContent style={tailwind`gap-1`}>
+              <CardTitle>{newsItem.title}</CardTitle>
+              <CardSubtitle>Posted by {newsItem.author.name}</CardSubtitle>
+            </CardContent>
+          </Card>
+        </TouchableOpacity>
+      ))}
+    </View>
   );
 }
+
+
+
 
 const CardAcara = () => {
   return (

@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import HomeScreen from './screen/HomeScreen'; 
 import ProfileScreen from './screen/ProfileScreen'; 
+import ArticleScreen from './screen/ArticleScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -70,6 +71,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator
+        initialRouteName='Home'
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
@@ -91,13 +93,20 @@ export default function App() {
           },
         })}
       >
-        <Tab.Screen name="Home" component={HomeStack} />
+        <Tab.Screen name="Home" component={HomeStack} initialParams={{}}/>
         <Tab.Screen name="Feed" component={FeedStack} />
         <Tab.Screen name="Add" component={AddStack} />
         <Tab.Screen name="Pesan" component={PesanStack} />
         <Tab.Screen name="Profile" component={ProfileStack} />
+        
+        {/* Route To Read Article */}
+        {/* Tambahkan Stack.Screen untuk ArticleScreen */}
+        <Stack.Screen
+          name="ArticleScreen"
+          component={ArticleScreen}
+          options={{ title: 'Article', headerShown: false }}
+        />
       </Tab.Navigator>
-
     </NavigationContainer>
   );
 }
