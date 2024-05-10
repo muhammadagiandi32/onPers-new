@@ -19,13 +19,15 @@ const HomeScreen = () => {
     { title: 'Hendaklah keadilan ditegakkan, walaupun langit akan runtuh.', uri: 'https://source.unsplash.com/random/3' },
   ]);
 
+  const onPressCard = (title) => {
+    console.log(title);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        
         <View style={styles.header}>
           <Text style={styles.headerText}>Selamat Datang!</Text>
-          {/* <TouchableOpacity onPress={toggleSearchInput}> */}
             <View style={styles.searchBar}>
               <AntDesign name="search1" size={24} />
               <TextInput
@@ -33,21 +35,22 @@ const HomeScreen = () => {
                 placeholder="Search"
               />
             </View>
-          {/* </TouchableOpacity> */}
         </View>
         <View>
-          {/* <Text style={styles.text}>Slideshow</Text> */}
+          {/* <Text>Berita Popular!</Text> */}
           <FlatList
             horizontal
             data={images}
             keyExtractor={(item) => item.title}
             renderItem={({ item }) => (
-              <View style={styles.slide}>
-                <Image source={{ uri: item.uri }} style={styles.slideImage} />
-                <Text style={[styles.slideTitle, { textAlign: 'center', textAlignVertical: 'center' }]} numberOfLines={null}>
-                  {item.title}
-                </Text>
-              </View>
+              <TouchableOpacity onPress={() => onPressCard(item.title)}>
+                <View style={styles.slide}>
+                  <Image source={{ uri: item.uri }} style={styles.slideImage} />
+                  <Text style={[styles.slideTitle, { textAlign: 'center', textAlignVertical: 'center' }]} numberOfLines={null}>
+                    {item.title}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             )}
           />
         </View>
@@ -61,7 +64,7 @@ const HomeScreen = () => {
             <Text style={styles.buttonText}>Narasumber</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <AntDesign name="infocirlceo" size={24} color="white" style={styles.icon} /> 
+            <AntDesign name="customerservice" size={24} color="white" style={styles.icon} /> 
             <Text style={styles.buttonText}>Hummas</Text>
           </TouchableOpacity>
         </View>
@@ -75,8 +78,8 @@ const HomeScreen = () => {
             <Text style={styles.buttonText}>Umum</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <AntDesign name="message1" size={24} color="white" style={styles.icon} />
-            <Text style={styles.buttonText}>Pesan</Text>
+            <AntDesign name="infocirlceo" size={24} color="white" style={styles.icon} />
+            <Text style={styles.buttonText}>Info</Text>
           </TouchableOpacity>
         </View>
         <View>
@@ -103,45 +106,68 @@ const HomeScreen = () => {
           <CardAcara/>
           <CardAcara/>
         </ScrollView>
+        <View>
+          <Text style={styles.text}>Rilis</Text>
+        </View>
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.scrollViewContainer}
+          showsHorizontalScrollIndicator={false}
+        >
+          <CardRilis/>
+          <CardRilis/>
+          <CardRilis/>
+        </ScrollView>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const CardBerita =()=>{
-  return(
+const CardBerita = () => {
+  return (
     <Card style={[tailwind`m-1`, styles.card]}>
-      <CardContent style={tailwind`gap-1`}>
-        <CardTitle>This is a card</CardTitle>
-        <CardText>You can use it to display information</CardText>
-      </CardContent>
-      <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
-      <CardContent style={tailwind`gap-1`}>
-        <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
-        <CardText>2 hours ago</CardText>
-      </CardContent>
+      <TouchableOpacity onPress={() => console.log('Berita Card')}>
+        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
+        <CardContent style={tailwind`gap-1`}>
+          <CardTitle>This is a card</CardTitle>
+          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
+        </CardContent>
+      </TouchableOpacity>
     </Card>
   );
 }
 
-const CardAcara =()=>{
-  return(
+const CardAcara = () => {
+  return (
     <Card style={[tailwind`m-1`, styles.card]}>
-      <CardContent style={tailwind`gap-1`}>
-        <CardTitle>This is a card</CardTitle>
-        <CardText>You can use it to display information</CardText>
-      </CardContent>
-      <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
-      <CardContent style={tailwind`gap-1`}>
-        <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
-        <CardText>2 hours ago</CardText>
-      </CardContent>
+      <TouchableOpacity onPress={() => console.log('Berita Card')}>
+        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
+        <CardContent style={tailwind`gap-1`}>
+          <CardTitle>This is a card</CardTitle>
+          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
+        </CardContent>
+      </TouchableOpacity>
+    </Card>
+  );
+}
+
+const CardRilis = () => {
+  return (
+    <Card style={[tailwind`m-1`, styles.card]}>
+      <TouchableOpacity onPress={() => console.log('Berita Card')}>
+        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
+        <CardContent style={tailwind`gap-1`}>
+          <CardTitle>This is a card</CardTitle>
+          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
+          {/* <CardText>2 hours ago</CardText> */}
+        </CardContent>
+      </TouchableOpacity>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-   container: {
+  container: {
     flex: 1,
     backgroundColor: '#fff',
   },
@@ -204,6 +230,7 @@ const styles = StyleSheet.create({
     height: 450,
     flex: 1, // Make the card take full width
     width: undefined, // Remove the fixed width
+    height: undefined,
     marginHorizontal: 16, // Add some margin to the card
   },
   text: {
@@ -215,8 +242,8 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   slideImage: {
-    width: 150,
-    height: 150,
+    width: 400,
+    height: 200,
     borderRadius: 10,
   },
   slideTitle: {
