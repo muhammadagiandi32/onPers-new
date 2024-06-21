@@ -16,9 +16,11 @@ import { useNavigation } from '@react-navigation/native';
 const HomeScreen = () => {
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
   useEffect(() => {
     // Fetch data from the API endpoint
-    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTUzNTIxMDYsImV4cCI6MTcxNTM1NTcwNiwibmJmIjoxNzE1MzUyMTA2LCJqdGkiOiJIVHBwM1ljMU5PVmE1UkxzIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.RbinstgSrzu2Y_9srNsX5lYSJ4RhXMxan0Q4qtSxc3k';
+    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTU2NzcyNDAsImV4cCI6MTcxNTY4MDg0MCwibmJmIjoxNzE1Njc3MjQwLCJqdGkiOiJTaXc0MjF0YXdJYlJwMmtCIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.70mWP4qxPHcwIzWqBbWn3McAQpQcznvP-Zky2NRlO_Y';
 
     // Konfigurasi header dengan bearer token
     const headers = {
@@ -31,22 +33,43 @@ const HomeScreen = () => {
         const data = response.data;
         // console.log(data.data);
         setNewsData(data.data);
+        // setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        setNewsData(false);
+        // setLoading(false);
+      });
+  }, []);
+
+  const [dataIklan, setDataIklan] = useState([]);
+  useEffect(() => {
+    const category = 'Technology';
+    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTU2NzcyNDAsImV4cCI6MTcxNTY4MDg0MCwibmJmIjoxNzE1Njc3MjQwLCJqdGkiOiJTaXc0MjF0YXdJYlJwMmtCIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.70mWP4qxPHcwIzWqBbWn3McAQpQcznvP-Zky2NRlO_Y';
+
+    // Konfigurasi header dengan bearer token
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json' // Jika diperlukan
+    };
+
+    axios.get(`http://10.0.2.2:8000/api/news/iklan/${category}`, { headers })
+      .then(response => {
+        const data = response.data;
+        // console.log(data.data);
+        setDataIklan(data.data);
         setLoading(false);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
-        setLoading(false);
+        // setLoading(false);
       });
-  }, []);
+    }, []);
 
-  const [images, setImages] = useState([
-    { title: 'Baca', uri: 'https://source.unsplash.com/random/1' },
-    { title: 'Fiat justitia ruat caelum', uri: 'https://source.unsplash.com/random/2' },
-    { title: 'Hendaklah keadilan ditegakkan, walaupun langit akan runtuh.', uri: 'https://source.unsplash.com/random/3' },
-  ]);
+  const onPressCard = (uuid) => {
+    console.log(uuid);
 
-  const onPressCard = (title) => {
-    console.log(title);
+    navigation.navigate('ArticleScreen', { uuid });
   };
 
   return (
@@ -64,21 +87,26 @@ const HomeScreen = () => {
         </View>
         <View>
           {/* <Text>Berita Popular!</Text> */}
-          <FlatList
-            horizontal
-            data={images}
-            keyExtractor={(item) => item.title}
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => onPressCard(item.title)}>
-                <View style={styles.slide}>
-                  <Image source={{ uri: item.uri }} style={styles.slideImage} />
-                  <Text style={[styles.slideTitle, { textAlign: 'center', textAlignVertical: 'center' }]} numberOfLines={null}>
-                    {item.title}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <FlatList
+              horizontal
+              data={dataIklan}
+              keyExtractor={(item, index) => item.title + index}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => onPressCard(item.id)}>
+                  <View style={styles.slide}>
+                    <Image source={{ uri: item.image_url }} style={styles.slideImage} />
+                    <Text  style={[styles.slideTitle, { textAlign: 'center', textAlignVertical: 'center' }]}
+                    numberOfLines={null}>
+                      {item.title}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          )}
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button}>
@@ -155,6 +183,10 @@ const HomeScreen = () => {
 };
 
 const CardBerita = ({ newsData }) => {
+  if(newsData == false){
+    return <ActivityIndicator size="large" color="#007AFF"></ActivityIndicator>
+  }
+  console.log(newsData);
   const navigation = useNavigation();
 
   const onPressBerita = (uuid) => {
@@ -166,7 +198,7 @@ const CardBerita = ({ newsData }) => {
       {newsData.map((newsItem, index) => (
         <TouchableOpacity key={index}  onPress={() => onPressBerita(newsItem.id)}>
           <Card style={styles.card}>
-            <CardImage source={{ uri: newsItem.image_url }} />
+            <CardImage source={{ uri: newsItem.image_url }} style={styles.slideImageCard}/>
             <CardContent style={tailwind`gap-1`}>
               <CardTitle>{newsItem.title}</CardTitle>
               <CardSubtitle>Posted by {newsItem.author.name}</CardSubtitle>
@@ -271,9 +303,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, // Add some padding to the scroll view
   },
   card: {
-    height: 450,
+    // height: 450,
     flex: 1, // Make the card take full width
-    width: undefined, // Remove the fixed width
+    width: 300, // Remove the fixed width
     height: undefined,
     marginHorizontal: 16, // Add some margin to the card
   },
@@ -290,11 +322,17 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
   },
+  slideImageCard:{
+    width:300,
+    height:250,
+    borderRadius:10
+  },
   slideTitle: {
+    padding: 10,
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 5,
-    textAlign: 'center',
+    color: '#333',
+    textAlign: 'center', // Center the text
   },
 });
 

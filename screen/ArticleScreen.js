@@ -1,16 +1,16 @@
 import React,{ useState, useEffect } from 'react';
-import { View, ImageBackground, Text, ScrollView } from 'react-native';
+import { View, ImageBackground, Text, ScrollView, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
 const ArticleScreen = ({route}) => {
     const { uuid } = route.params;
-    console.log(uuid);
+    // console.log(uuid);
 
     const [newsData, setNewsData] = useState(null); // Inisialisasi state dengan null
 
     useEffect(() => {
         // Fetch data from the API endpoint
-        const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTUzNTIxMDYsImV4cCI6MTcxNTM1NTcwNiwibmJmIjoxNzE1MzUyMTA2LCJqdGkiOiJIVHBwM1ljMU5PVmE1UkxzIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.RbinstgSrzu2Y_9srNsX5lYSJ4RhXMxan0Q4qtSxc3k';
+        const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTU2NzcyNDAsImV4cCI6MTcxNTY4MDg0MCwibmJmIjoxNzE1Njc3MjQwLCJqdGkiOiJTaXc0MjF0YXdJYlJwMmtCIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.70mWP4qxPHcwIzWqBbWn3McAQpQcznvP-Zky2NRlO_Y';
 
         // Konfigurasi header dengan bearer token
         const headers = {
@@ -30,7 +30,7 @@ const ArticleScreen = ({route}) => {
 
     if (!newsData) {
         // Tampilkan pesan loading jika data belum diambil
-        return <Text>Loading...</Text>;
+        return <ActivityIndicator size="100" color="#0000ff"></ActivityIndicator>;
     }
 
     return (
@@ -61,9 +61,9 @@ const ArticleScreen = ({route}) => {
                 </Text>
             </ImageBackground>
             <View style={{ padding: 20 }}>
-                <Text style={{ fontSize: 18, marginBottom: 20 }}>
+                {/* <Text style={{ fontSize: 18, marginBottom: 20 }}>
                     Article summary or introduction
-                </Text>
+                </Text> */}
                 <Text style={{ fontSize: 16, textAlign:'justify' }}>
                     {newsData.content} {/* Gunakan dataNews dari state */}
                 </Text>

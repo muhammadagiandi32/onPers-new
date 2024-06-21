@@ -18,6 +18,13 @@ function HomeStack() {
         component={HomeScreen}
         options={{ title: 'Home', headerShown: false }}
       />
+      {/* Route To Read Article */}
+      {/* Tambahkan Stack.Screen untuk ArticleScreen */}
+      <Stack.Screen
+        name="ArticleScreen"
+        component={ArticleScreen}
+        options={{ title: 'Article', headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -98,14 +105,6 @@ export default function App() {
         <Tab.Screen name="Add" component={AddStack} />
         <Tab.Screen name="Pesan" component={PesanStack} />
         <Tab.Screen name="Profile" component={ProfileStack} />
-        
-        {/* Route To Read Article */}
-        {/* Tambahkan Stack.Screen untuk ArticleScreen */}
-        <Stack.Screen
-          name="ArticleScreen"
-          component={ArticleScreen}
-          options={{ title: 'Article', headerShown: false }}
-        />
       </Tab.Navigator>
     </NavigationContainer>
   );
