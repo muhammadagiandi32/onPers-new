@@ -1,338 +1,464 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image,TextInput, FlatList , ActivityIndicator} from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-  CardImage,
-  CardSubtitle,
-  CardText,
-  CardTitle,
-} from "../src/components/card";
-import tailwind from "twrnc";
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  SafeAreaView,
+  TextInput,
+  Dimensions,
+  ScrollView,
+} from "react-native";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import api from "../src/utils/api";
 
-const HomeScreen = () => {
-  const [newsData, setNewsData] = useState([]);
+const HomeScreen = ({ navigation }) => {
+  const [breakingNews, setBreakingNews] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
+  const [isSearching, setIsSearching] = useState(false); // Untuk toggle input pencarian
+  const [searchQuery, setSearchQuery] = useState(""); // Teks pencarian
+  const [filteredRecommendations, setFilteredRecommendations] = useState([]);
+
+  const windowHeight = Dimensions.get("window").height;
 
   useEffect(() => {
-    // Fetch data from the API endpoint
-    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTU2NzcyNDAsImV4cCI6MTcxNTY4MDg0MCwibmJmIjoxNzE1Njc3MjQwLCJqdGkiOiJTaXc0MjF0YXdJYlJwMmtCIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.70mWP4qxPHcwIzWqBbWn3McAQpQcznvP-Zky2NRlO_Y';
-
-    // Konfigurasi header dengan bearer token
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json' // Jika diperlukan
+    const fetchNews = async () => {
+      try {
+        const response = await api.get("/news");
+        setBreakingNews(response.data.data.slice(0, 5)); // Breaking News
+        setRecommendations(response.data.data.slice(5)); // Recommendations
+        setFilteredRecommendations(response.data.data.slice(5)); // Data rekomendasi yang difilter
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching news:", error);
+        setLoading(false);
+      }
     };
 
-    axios.get('http://10.0.2.2:8000/api/news', { headers })
-      .then(response => {
-        const data = response.data;
-        // console.log(data.data);
-        setNewsData(data.data);
-        // setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        setNewsData(false);
-        // setLoading(false);
-      });
+    fetchNews();
   }, []);
 
-  const [dataIklan, setDataIklan] = useState([]);
-  useEffect(() => {
-    const category = 'Technology';
-    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTU2NzcyNDAsImV4cCI6MTcxNTY4MDg0MCwibmJmIjoxNzE1Njc3MjQwLCJqdGkiOiJTaXc0MjF0YXdJYlJwMmtCIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.70mWP4qxPHcwIzWqBbWn3McAQpQcznvP-Zky2NRlO_Y';
-
-    // Konfigurasi header dengan bearer token
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json' // Jika diperlukan
-    };
-
-    axios.get(`http://10.0.2.2:8000/api/news/iklan/${category}`, { headers })
-      .then(response => {
-        const data = response.data;
-        // console.log(data.data);
-        setDataIklan(data.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        // setLoading(false);
-      });
-    }, []);
-
-  const onPressCard = (uuid) => {
-    console.log(uuid);
-
-    navigation.navigate('ArticleScreen', { uuid });
+  // Fungsi untuk mencari berita berdasarkan title
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query === "") {
+      setFilteredRecommendations(recommendations); // Tampilkan semua jika pencarian kosong
+    } else {
+      const filtered = recommendations.filter((item) =>
+        item.title.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredRecommendations(filtered);
+    }
   };
+
+  const renderBreakingNews = ({ item }) => (
+    <TouchableOpacity
+      style={styles.breakingCard}
+      onPress={() => navigation.navigate("ArticleScreen", { slug: item.slug })}
+    >
+      <Image
+        source={{ uri: item.image_url }}
+        style={styles.breakingImage}
+        resizeMode="cover"
+      />
+      <View style={styles.breakingOverlay}>
+        <Text style={styles.categoryTag}>Sports</Text>
+        <Text style={styles.breakingTitle}>{item.title}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  // const renderRecommendation = ({ item }) => (
+  //   <TouchableOpacity
+  //     style={styles.recommendationCard}
+  //     onPress={() => navigation.navigate("ArticleScreen", { slug: item.slug })}
+  //   >
+  //     <Image
+  //       source={{ uri: item.image_url }}
+  //       style={styles.recommendationImage}
+  //     />
+  //     <View style={styles.recommendationContent}>
+  //       <Text style={styles.categoryTag}>Education</Text>
+  //       <Text style={styles.recommendationTitle} numberOfLines={2}>
+  //         {item.title}
+  //       </Text>
+  //       <Text style={styles.recommendationSubtitle}>
+  //         {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+  //       </Text>
+  //     </View>
+  //   </TouchableOpacity>
+  // );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Selamat Datang!</Text>
-            <View style={styles.searchBar}>
-              <AntDesign name="search1" size={24} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search"
-              />
-            </View>
-        </View>
-        <View>
-          {/* <Text>Berita Popular!</Text> */}
-          {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" />
+      {/* Header */}
+      <View style={styles.header}>
+        {isSearching ? (
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search news..."
+            value={searchQuery}
+            onChangeText={handleSearch}
+            autoFocus
+          />
+        ) : (
+          <Text style={styles.headerTitle}>Home</Text>
+        )}
+        <View style={styles.headerIcons}>
+          {isSearching ? (
+            <TouchableOpacity onPress={() => setIsSearching(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
           ) : (
-            <FlatList
-              horizontal
-              data={dataIklan}
-              keyExtractor={(item, index) => item.title + index}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => onPressCard(item.id)}>
-                  <View style={styles.slide}>
-                    <Image source={{ uri: item.image_url }} style={styles.slideImage} />
-                    <Text  style={[styles.slideTitle, { textAlign: 'center', textAlignVertical: 'center' }]}
-                    numberOfLines={null}>
-                      {item.title}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            <TouchableOpacity onPress={() => setIsSearching(true)}>
+              <Feather name="search" size={24} color="#333" />
+            </TouchableOpacity>
           )}
-        </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="user" size={24} color="white" style={styles.icon} /> 
-            <Text style={styles.buttonText}>Wartawan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="addusergroup" size={24} color="white" style={styles.icon} /> 
-            <Text style={styles.buttonText}>Narasumber</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="customerservice" size={24} color="white" style={styles.icon} /> 
-            <Text style={styles.buttonText}>Hummas</Text>
+          <TouchableOpacity>
+            <Ionicons name="notifications-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="filetext1" size={24} color="white" style={styles.icon} />
-            <Text style={styles.buttonText}>Jasa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="bulb1" size={24} color="white" style={styles.icon} />
-            <Text style={styles.buttonText}>Umum</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <AntDesign name="infocirlceo" size={24} color="white" style={styles.icon} />
-            <Text style={styles.buttonText}>Info</Text>
+      </View>
+
+      {/* Breaking News Section */}
+      <View style={styles.section}>
+        <View style={styles.breakingNewsHeader}>
+          <Text style={styles.sectionTitle}>Breaking News</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAll}>View all</Text>
           </TouchableOpacity>
         </View>
-        {/* Berita */}
-        <View>
-          <Text style={styles.text}>Berita!</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={breakingNews}
+            keyExtractor={(item) => item.id}
+            renderItem={renderBreakingNews}
+          />
+        )}
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recommendation</Text>
+        <TouchableOpacity>
+          <Text style={styles.viewAll}>View all</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Content */}
+      <FlatList
+        data={filteredRecommendations} // Data rekomendasi yang difilter
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <>
+            {/* Recommendation Header */}
+            <View style={styles.section}>
+              {/* Scrollable Recommendation Section */}
+              <ScrollView
+                style={{ height: windowHeight * 0.3 }}
+                showsVerticalScrollIndicator={true}
+              >
+                {filteredRecommendations.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.recommendationCard}
+                    onPress={() =>
+                      navigation.navigate("ArticleScreen", { slug: item.slug })
+                    }
+                  >
+                    <Image
+                      source={{ uri: item.image_url }}
+                      style={styles.recommendationImage}
+                    />
+                    <View style={styles.recommendationContent}>
+                      <Text style={styles.categoryTag}>Education</Text>
+                      <Text
+                        style={styles.recommendationTitle}
+                        numberOfLines={2}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text style={styles.recommendationSubtitle}>
+                        {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </>
+        }
+      />
+      {/* Category Section */}
+      <View style={styles.categorySection}>
+        <View style={styles.categoryHeader}>
+          <Text style={styles.sectionTitle}>Category</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAll}>See All</Text>
+          </TouchableOpacity>
         </View>
-        <ScrollView
-          horizontal
-          contentContainerStyle={styles.scrollViewContainer}
-          showsHorizontalScrollIndicator={false}
-        >
-          {/* Menggunakan CardBerita dengan props newsData */}
-          <CardBerita newsData={newsData} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[
+            { id: "1", name: "Wartawan", icon: "person" },
+            { id: "2", name: "Narasumber", icon: "mic" },
+            { id: "3", name: "Humas", icon: "briefcase" },
+            { id: "4", name: "Jasa", icon: "hammer" },
+            { id: "5", name: "Umum", icon: "people" },
+            { id: "6", name: "Info", icon: "information-circle" },
+            // { id: "7", name: "Info", icon: "information-circle" },
+            // { id: "8", name: "Info", icon: "information-circle" },
+            // { id: "9", name: "Info", icon: "information-circle" },
+            // { id: "10", name: "Info", icon: "information-circle" },
+          ].map((category) => (
+            <View key={category.id} style={styles.categoryCard}>
+              <TouchableOpacity style={styles.categoryIcon}>
+                <Ionicons name={category.icon} size={45} color="#EEEDED" />
+              </TouchableOpacity>
+              <Text style={styles.categoryText}>{category.name}</Text>
+            </View>
+          ))}
         </ScrollView>
-        {/* End Berita */}
-        {/* Acara */}
-        <View>
-          <Text style={styles.text}>Acara!</Text>
-        </View>
-        <ScrollView
+      </View>
+      {/* Featured Promotions Section */}
+      <View style={styles.promotionSection}>
+        <Text style={styles.sectionTitle}>Cek yang menarik di GoFood</Text>
+        <FlatList
           horizontal
-          contentContainerStyle={styles.scrollViewContainer}
           showsHorizontalScrollIndicator={false}
-        >
-          <CardAcara/>
-          <CardAcara/>
-          <CardAcara/>
-        </ScrollView>
-        {/* End Acara */}
-        {/* Rilis */}
-        <View>
-          <Text style={styles.text}>Rilis</Text>
-        </View>
-        <ScrollView
-          horizontal
-          contentContainerStyle={styles.scrollViewContainer}
-          showsHorizontalScrollIndicator={false}
-        >
-          <CardRilis/>
-          <CardRilis/>
-          <CardRilis/>
-        </ScrollView>
-        {/* End Rilis */}
-      </ScrollView>
+          data={[
+            {
+              id: "1",
+              title: "Diskon 30%",
+              subtitle: "Toko Buah Semoga Berkah, Bendungan Hilir",
+              image: "https://via.placeholder.com/150",
+              ad: false,
+            },
+            {
+              id: "2",
+              title: "Dipesan 10+ kali",
+              subtitle: "",
+              image: "https://via.placeholder.com/150",
+              ad: true,
+            },
+          ]}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.promotionCard}>
+              <Image
+                source={{ uri: item.image }}
+                style={styles.promotionImage}
+              />
+              <View style={styles.promotionOverlay}>
+                <Text style={styles.promotionTitle}>{item.title}</Text>
+                <Text style={styles.promotionSubtitle}>{item.subtitle}</Text>
+              </View>
+              {item.ad && <Text style={styles.adBadge}>Ad</Text>}
+            </View>
+          )}
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
-const CardBerita = ({ newsData }) => {
-  if(newsData == false){
-    return <ActivityIndicator size="large" color="#007AFF"></ActivityIndicator>
-  }
-  console.log(newsData);
-  const navigation = useNavigation();
-
-  const onPressBerita = (uuid) => {
-    navigation.navigate('ArticleScreen', { uuid });
-  };
-
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      {newsData.map((newsItem, index) => (
-        <TouchableOpacity key={index}  onPress={() => onPressBerita(newsItem.id)}>
-          <Card style={styles.card}>
-            <CardImage source={{ uri: newsItem.image_url }} style={styles.slideImageCard}/>
-            <CardContent style={tailwind`gap-1`}>
-              <CardTitle>{newsItem.title}</CardTitle>
-              <CardSubtitle>Posted by {newsItem.author.name}</CardSubtitle>
-            </CardContent>
-          </Card>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-
-
-
-const CardAcara = () => {
-  return (
-    <Card style={[tailwind`m-1`, styles.card]}>
-      <TouchableOpacity onPress={() => console.log('Berita Card')}>
-        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
-        <CardContent style={tailwind`gap-1`}>
-          <CardTitle>This is a card</CardTitle>
-          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
-        </CardContent>
-      </TouchableOpacity>
-    </Card>
-  );
-}
-
-const CardRilis = () => {
-  return (
-    <Card style={[tailwind`m-1`, styles.card]}>
-      <TouchableOpacity onPress={() => console.log('Berita Card')}>
-        <CardImage source={{ uri: "https://source.unsplash.com/random" }} />
-        <CardContent style={tailwind`gap-1`}>
-          <CardTitle>This is a card</CardTitle>
-          <CardSubtitle>Posted by @worldtraveller</CardSubtitle>
-          {/* <CardText>2 hours ago</CardText> */}
-        </CardContent>
-      </TouchableOpacity>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    backgroundColor: "#fff",
   },
-  input: {
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+  },
+  searchInput: {
     flex: 1,
-    marginLeft: 10,
     fontSize: 16,
-    color: '#333',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginVertical: 10,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
     borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '30%',
+    paddingHorizontal: 10,
+    backgroundColor: "#f0f0f0",
   },
-  buttonText: {
-    color: '#fff',
+  breakingNewsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  section: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  viewAll: {
+    fontSize: 14,
+    color: "#FF4C4C",
+  },
+  breakingCard: {
+    width: 300,
+    marginRight: 15,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  breakingImage: {
+    width: "100%",
+    height: 200,
+  },
+  breakingOverlay: {
+    padding: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+  },
+  categoryTag: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+    backgroundColor: "#FF4C4C",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: "flex-start",
+  },
+  breakingTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    color: "#fff",
     marginTop: 5,
   },
-  icon: {
-    width: 24,
-    height: 24,
-    marginBottom: 5,
+  recommendationCard: {
+    flexDirection: "row",
+    marginBottom: 15,
+    paddingHorizontal: 20,
   },
-  scrollViewContainer: {
-    paddingHorizontal: 16, // Add some padding to the scroll view
-  },
-  card: {
-    // height: 450,
-    flex: 1, // Make the card take full width
-    width: 300, // Remove the fixed width
-    height: undefined,
-    marginHorizontal: 16, // Add some margin to the card
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 20,
-  },
-  slide: {
-    margin: 10,
-  },
-  slideImage: {
-    width: 400,
-    height: 200,
+  recommendationImage: {
+    width: 100,
+    height: 100,
     borderRadius: 10,
+    marginRight: 10,
   },
-  slideImageCard:{
-    width:300,
-    height:250,
-    borderRadius:10
+  recommendationContent: {
+    flex: 1,
+    justifyContent: "center",
   },
-  slideTitle: {
+  recommendationTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  recommendationSubtitle: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 5,
+  },
+
+  // section categoty
+  categorySection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  categoryCard: {
+    flex: 1,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  categoryIcon: {
+    backgroundColor: "#FF4C4C",
+    width: 80,
+    height: 60,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 5,
+    margin: 3,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: "#333",
+    textAlign: "center",
+  },
+
+  // promotion Section: {
+
+  promotionSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  promotionCard: {
+    width: 250,
+    height: 150,
+    marginRight: 15,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    elevation: 3, // Shadow for Android
+    shadowColor: "#000", // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  promotionImage: {
+    width: "100%",
+    height: "100%",
+  },
+  promotionOverlay: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
     padding: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  promotionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center', // Center the text
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  promotionSubtitle: {
+    fontSize: 12,
+    color: "#fff",
+  },
+  adBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#FF6F61",
+    color: "#fff",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    fontSize: 10,
+    fontWeight: "bold",
   },
 });
 
