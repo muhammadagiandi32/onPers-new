@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,16 @@ import {
   TextInput,
   Dimensions,
   ScrollView,
+  LogBox,
 } from "react-native";
+
+LogBox.ignoreLogs([
+  "VirtualizedLists should never be nested inside plain ScrollViews",
+]);
+
 import { Ionicons, Feather } from "@expo/vector-icons";
 import api from "../src/utils/api";
+const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
   const [breakingNews, setBreakingNews] = useState([]);
@@ -22,8 +29,6 @@ const HomeScreen = ({ navigation }) => {
   const [isSearching, setIsSearching] = useState(false); // Untuk toggle input pencarian
   const [searchQuery, setSearchQuery] = useState(""); // Teks pencarian
   const [filteredRecommendations, setFilteredRecommendations] = useState([]);
-
-  const windowHeight = Dimensions.get("window").height;
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -71,182 +76,56 @@ const HomeScreen = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
+  const PromotionSection = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const flatListRef = useRef(null); // Ref untuk mengontrol FlatList
 
-  // const renderRecommendation = ({ item }) => (
-  //   <TouchableOpacity
-  //     style={styles.recommendationCard}
-  //     onPress={() => navigation.navigate("ArticleScreen", { slug: item.slug })}
-  //   >
-  //     <Image
-  //       source={{ uri: item.image_url }}
-  //       style={styles.recommendationImage}
-  //     />
-  //     <View style={styles.recommendationContent}>
-  //       <Text style={styles.categoryTag}>Education</Text>
-  //       <Text style={styles.recommendationTitle} numberOfLines={2}>
-  //         {item.title}
-  //       </Text>
-  //       <Text style={styles.recommendationSubtitle}>
-  //         {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
-  //       </Text>
-  //     </View>
-  //   </TouchableOpacity>
-  // );
+    const data = [
+      {
+        id: "1",
+        title: "Diskon 30%",
+        subtitle: "Toko Buah Semoga Berkah, Bendungan Hilir",
+        image: "https://via.placeholder.com/150",
+        ad: true,
+      },
+      {
+        id: "2",
+        title: "Dipesan 10+ kali",
+        subtitle: "Pokonya enak",
+        image: "https://via.placeholder.com/150",
+        ad: false,
+      },
+    ];
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        {isSearching ? (
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search news..."
-            value={searchQuery}
-            onChangeText={handleSearch}
-            autoFocus
-          />
-        ) : (
-          <Text style={styles.headerTitle}>Home</Text>
-        )}
-        <View style={styles.headerIcons}>
-          {isSearching ? (
-            <TouchableOpacity onPress={() => setIsSearching(false)}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => setIsSearching(true)}>
-              <Feather name="search" size={24} color="#333" />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    // Pergeseran otomatis setiap 3 detik
+    useEffect(() => {
+      const interval = setInterval(() => {
+        const nextIndex = (currentIndex + 1) % data.length; // Loop kembali ke awal jika di akhir
+        setCurrentIndex(nextIndex);
 
-      {/* Breaking News Section */}
-      <View style={styles.section}>
-        <View style={styles.breakingNewsHeader}>
-          <Text style={styles.sectionTitle}>Breaking News</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAll}>View all</Text>
-          </TouchableOpacity>
-        </View>
-        {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={breakingNews}
-            keyExtractor={(item) => item.id}
-            renderItem={renderBreakingNews}
-          />
-        )}
-      </View>
+        // Pindahkan FlatList ke slide berikutnya
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+      }, 3000); // 3 detik
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recommendation</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAll}>View all</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Content */}
-      <FlatList
-        data={filteredRecommendations} // Data rekomendasi yang difilter
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <>
-            {/* Recommendation Header */}
-            <View style={styles.section}>
-              {/* Scrollable Recommendation Section */}
-              <ScrollView
-                style={{ height: windowHeight * 0.3 }}
-                showsVerticalScrollIndicator={true}
-              >
-                {filteredRecommendations.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.recommendationCard}
-                    onPress={() =>
-                      navigation.navigate("ArticleScreen", { slug: item.slug })
-                    }
-                  >
-                    <Image
-                      source={{ uri: item.image_url }}
-                      style={styles.recommendationImage}
-                    />
-                    <View style={styles.recommendationContent}>
-                      <Text style={styles.categoryTag}>Education</Text>
-                      <Text
-                        style={styles.recommendationTitle}
-                        numberOfLines={2}
-                      >
-                        {item.title}
-                      </Text>
-                      <Text style={styles.recommendationSubtitle}>
-                        {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </>
-        }
-      />
-      {/* Category Section */}
-      <View style={styles.categorySection}>
-        <View style={styles.categoryHeader}>
-          <Text style={styles.sectionTitle}>Category</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAll}>See All</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {[
-            { id: "1", name: "Wartawan", icon: "person" },
-            { id: "2", name: "Narasumber", icon: "mic" },
-            { id: "3", name: "Humas", icon: "briefcase" },
-            { id: "4", name: "Jasa", icon: "hammer" },
-            { id: "5", name: "Umum", icon: "people" },
-            { id: "6", name: "Info", icon: "information-circle" },
-            // { id: "7", name: "Info", icon: "information-circle" },
-            // { id: "8", name: "Info", icon: "information-circle" },
-            // { id: "9", name: "Info", icon: "information-circle" },
-            // { id: "10", name: "Info", icon: "information-circle" },
-          ].map((category) => (
-            <View key={category.id} style={styles.categoryCard}>
-              <TouchableOpacity style={styles.categoryIcon}>
-                <Ionicons name={category.icon} size={45} color="#EEEDED" />
-              </TouchableOpacity>
-              <Text style={styles.categoryText}>{category.name}</Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-      {/* Featured Promotions Section */}
+      return () => clearInterval(interval); // Bersihkan interval saat komponen di-unmount
+    }, [currentIndex]);
+
+    const handleScroll = (event) => {
+      const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+      setCurrentIndex(newIndex);
+    };
+
+    return (
       <View style={styles.promotionSection}>
-        <Text style={styles.sectionTitle}>Cek yang menarik di GoFood</Text>
+        <Text style={styles.sectionTitle}>Advertorial</Text>
         <FlatList
+          ref={flatListRef} // Ref untuk mengontrol FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={[
-            {
-              id: "1",
-              title: "Diskon 30%",
-              subtitle: "Toko Buah Semoga Berkah, Bendungan Hilir",
-              image: "https://via.placeholder.com/150",
-              ad: false,
-            },
-            {
-              id: "2",
-              title: "Dipesan 10+ kali",
-              subtitle: "",
-              image: "https://via.placeholder.com/150",
-              ad: true,
-            },
-          ]}
+          data={data}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.promotionCard}>
@@ -261,8 +140,186 @@ const HomeScreen = ({ navigation }) => {
               {item.ad && <Text style={styles.adBadge}>Ad</Text>}
             </View>
           )}
+          pagingEnabled
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         />
+        {/* Indikator titik */}
+        <View style={styles.indicatorContainer}>
+          {data.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.indicator,
+                currentIndex === index ? styles.activeIndicator : null,
+              ]}
+            />
+          ))}
+        </View>
       </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          {isSearching ? (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search news..."
+              value={searchQuery}
+              onChangeText={handleSearch}
+              autoFocus
+            />
+          ) : (
+            <Text style={styles.headerTitle}>Home</Text>
+          )}
+          <View style={styles.headerIcons}>
+            {isSearching ? (
+              <TouchableOpacity onPress={() => setIsSearching(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setIsSearching(true)}>
+                <Feather name="search" size={24} color="#333" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity>
+              <Ionicons name="notifications-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Breaking News Section */}
+        <View style={styles.section}>
+          <View style={styles.breakingNewsHeader}>
+            <Text style={styles.sectionTitle}>Breaking News</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={breakingNews}
+              keyExtractor={(item) => item.id}
+              renderItem={renderBreakingNews}
+              nestedScrollEnabled={true}
+            />
+          )}
+        </View>
+
+        {/* Advertorial Section */}
+        <View style={styles.section}>
+          <View style={styles.breakingNewsHeader}>
+            <Text style={styles.sectionTitle}>Advertorial</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={filteredRecommendations} // Data rekomendasi
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.recommendationCard}
+                onPress={() =>
+                  navigation.navigate("ArticleScreen", { slug: item.slug })
+                }
+              >
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={styles.recommendationImage}
+                />
+                <View style={styles.recommendationContent}>
+                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.recommendationTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.recommendationSubtitle}>
+                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
+            nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
+          />
+        </View>
+        
+        {/* tes Section */}
+        <View style={styles.section}>
+          <View style={styles.breakingNewsHeader}>
+            <Text style={styles.sectionTitle}>bacot</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={filteredRecommendations} // Data rekomendasi
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.recommendationCard}
+                onPress={() =>
+                  navigation.navigate("ArticleScreen", { slug: item.slug })
+                }
+              >
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={styles.recommendationImage}
+                />
+                <View style={styles.recommendationContent}>
+                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.recommendationTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.recommendationSubtitle}>
+                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
+            nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
+          />
+        </View>
+
+        {/* Category Section */}
+        <View style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.sectionTitle}>Category</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[
+              { id: "1", name: "Wartawan", icon: "person" },
+              { id: "2", name: "Narasumber", icon: "mic" },
+              { id: "3", name: "Humas", icon: "briefcase" },
+              { id: "4", name: "Jasa", icon: "hammer" },
+              { id: "5", name: "Umum", icon: "people" },
+              { id: "6", name: "Info", icon: "information-circle" },
+            ].map((category) => (
+              <View key={category.id} style={styles.categoryCard}>
+                <TouchableOpacity style={styles.categoryIcon}>
+                  <Ionicons name={category.icon} size={45} color="#EEEDED" />
+                </TouchableOpacity>
+                <Text style={styles.categoryText}>{category.name}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Featured Promotions Section */}
+        <PromotionSection />
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -319,7 +376,7 @@ const styles = StyleSheet.create({
     color: "#FF4C4C",
   },
   breakingCard: {
-    width: 300,
+    width: 380,
     marginRight: 15,
     borderRadius: 10,
     overflow: "hidden",
@@ -410,34 +467,32 @@ const styles = StyleSheet.create({
   },
 
   // promotion Section: {
-
   promotionSection: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+    marginVertical: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   promotionCard: {
-    width: 250,
-    height: 150,
-    marginRight: 15,
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    elevation: 3, // Shadow for Android
-    shadowColor: "#000", // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    width,
+    alignItems: "center",
   },
   promotionImage: {
-    width: "100%",
-    height: "100%",
+    width: width * 0.8,
+    height: 200,
+    borderRadius: 10,
+    resizeMode: "cover",
   },
   promotionOverlay: {
+    padding: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     position: "absolute",
     bottom: 0,
     width: "100%",
-    padding: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "f034",
   },
   promotionTitle: {
     fontSize: 16,
@@ -447,18 +502,35 @@ const styles = StyleSheet.create({
   promotionSubtitle: {
     fontSize: 12,
     color: "#fff",
+    marginTop: 5,
   },
   adBadge: {
     position: "absolute",
     top: 10,
     right: 10,
-    backgroundColor: "#FF6F61",
+    backgroundColor: "red",
     color: "#fff",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
     fontSize: 10,
     fontWeight: "bold",
+  },
+  indicatorContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ccc",
+    marginHorizontal: 4,
+  },
+  activeIndicator: {
+    backgroundColor: "#007AFF",
   },
 });
 

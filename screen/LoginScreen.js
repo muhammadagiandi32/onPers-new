@@ -27,23 +27,26 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       const requestBody = {
-        email: email, // Properti 'email'
-        password: password, // Properti 'password'
+        email: email,
+        password: password,
       };
-      console.log(requestBody);
 
-      const response = await api.post("/login", { email, password });
-      console.log(response.data);
+      console.log("Request Body:", requestBody);
+      // console.log("Base URL:", api.defaults.baseURL);
+      console.log("Full URL:", `${api.defaults.baseURL}/login`);
+
+      const response = await api.post("/login", requestBody);
+      console.log("Response Data:", response.data);
 
       const { access_token, user } = response.data;
 
-      // Simpan token di AsyncStorage
       await AsyncStorage.setItem("access_token", access_token);
 
       Alert.alert("Success", `Welcome, ${user.name}!`);
       navigation.navigate("HomeScreen");
     } catch (error) {
-      console.log("Login error:", error);
+      console.log("Login Error:", error);
+      console.log("Error Response:", error.response?.data);
 
       Alert.alert("Error", error.response?.data?.message || "Login failed");
     } finally {
