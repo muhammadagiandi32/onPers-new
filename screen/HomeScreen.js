@@ -29,36 +29,41 @@ const HomeScreen = ({ navigation }) => {
   const [isSearching, setIsSearching] = useState(false); // Untuk toggle input pencarian
   const [searchQuery, setSearchQuery] = useState(""); // Teks pencarian
   const [filteredRecommendations, setFilteredRecommendations] = useState([]);
+
+  // News By category and BreakingNews
   const [BeritaAdvertorial, setBeritaAdvertorial] = useState([]);
   const [BeritaRilis, setBeritaRilis] = useState([]);
   const [BeritaBerita, setBeritBerita] = useState([]);
   const [BeritAcara, setBeritAcara] = useState([]);
+  const [BreakingNews, setBereakingNews] = useState([]);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const advertorialNews = await api.get("/breaking-news/category", {
+        const advertorialNews = await api.get("/news/category", {
           params: { category: "Advertorial" },
         });
         setBeritaAdvertorial(advertorialNews.data.data);
 
-        const rilisNews = await api.get("/breaking-news/category", {
+        const rilisNews = await api.get("/news/category", {
           params: { category: "Rilis" },
         });
         setBeritaRilis(rilisNews.data.data);
 
-        const beritaNews = await api.get("/breaking-news/category", {
+        const beritaNews = await api.get("/news/category", {
           params: { category: "Berita" },
         });
         setBeritBerita(beritaNews.data.data);
 
-        const acaraNews = await api.get("/breaking-news/category", {
+        const acaraNews = await api.get("/news/category", {
           params: { category: "Acara" },
         });
         setBeritAcara(acaraNews.data.data);
 
+        const breakingNews = await api.get("/breaking-news");
+        setBereakingNews(breakingNews.data.data);
+
         const response = await api.get("/news");
-        setBreakingNews(response.data.data.slice(0, 5)); // Breaking News
         setRecommendations(response.data.data.slice(5)); // Recommendations
         setFilteredRecommendations(response.data.data.slice(5)); // Data rekomendasi yang difilter
         setLoading(false);
@@ -75,9 +80,9 @@ const HomeScreen = ({ navigation }) => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query === "") {
-      setFilteredRecommendations(recommendations); // Tampilkan semua jika pencarian kosong
+      setFilteredRecommendations(filteredRecommendations); // Tampilkan semua jika pencarian kosong
     } else {
-      const filtered = recommendations.filter((item) =>
+      const filtered = filteredRecommendations.filter((item) =>
         item.title.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredRecommendations(filtered);
@@ -230,7 +235,7 @@ const HomeScreen = ({ navigation }) => {
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={false}
-              data={breakingNews}
+              data={BreakingNews}
               keyExtractor={(item) => item.id}
               renderItem={renderBreakingNews}
               nestedScrollEnabled={true}
