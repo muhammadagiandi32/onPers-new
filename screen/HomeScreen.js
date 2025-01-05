@@ -29,10 +29,34 @@ const HomeScreen = ({ navigation }) => {
   const [isSearching, setIsSearching] = useState(false); // Untuk toggle input pencarian
   const [searchQuery, setSearchQuery] = useState(""); // Teks pencarian
   const [filteredRecommendations, setFilteredRecommendations] = useState([]);
+  const [BeritaAdvertorial, setBeritaAdvertorial] = useState([]);
+  const [BeritaRilis, setBeritaRilis] = useState([]);
+  const [BeritaBerita, setBeritBerita] = useState([]);
+  const [BeritAcara, setBeritAcara] = useState([]);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
+        const advertorialNews = await api.get("/breaking-news/category", {
+          params: { category: "Advertorial" },
+        });
+        setBeritaAdvertorial(advertorialNews.data.data);
+
+        const rilisNews = await api.get("/breaking-news/category", {
+          params: { category: "Rilis" },
+        });
+        setBeritaRilis(rilisNews.data.data);
+
+        const beritaNews = await api.get("/breaking-news/category", {
+          params: { category: "Berita" },
+        });
+        setBeritBerita(beritaNews.data.data);
+
+        const acaraNews = await api.get("/breaking-news/category", {
+          params: { category: "Acara" },
+        });
+        setBeritAcara(acaraNews.data.data);
+
         const response = await api.get("/news");
         setBreakingNews(response.data.data.slice(0, 5)); // Breaking News
         setRecommendations(response.data.data.slice(5)); // Recommendations
@@ -223,7 +247,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={filteredRecommendations} // Data rekomendasi
+            data={BeritaAdvertorial} // Data rekomendasi
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -252,16 +276,16 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
         
-        {/* tes Section */}
+        {/* Rilis Section */}
         <View style={styles.section}>
           <View style={styles.breakingNewsHeader}>
-            <Text style={styles.sectionTitle}>bacot</Text>
+            <Text style={styles.sectionTitle}>Rilis</Text>
             <TouchableOpacity>
               <Text style={styles.viewAll}>View all</Text>
             </TouchableOpacity>
           </View>
           <FlatList
-            data={filteredRecommendations} // Data rekomendasi
+            data={BeritaRilis} // Data rekomendasi
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -287,6 +311,82 @@ const HomeScreen = ({ navigation }) => {
             )}
             style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
             nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
+          />
+        </View>
+        
+          {/* Berita Section */}
+          <View style={styles.section}>
+          <View style={styles.breakingNewsHeader}>
+            <Text style={styles.sectionTitle}>Berita</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={BeritaBerita} // Data rekomendasi
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.recommendationCard}
+                onPress={() =>
+                  navigation.navigate("ArticleScreen", { slug: item.slug })
+                }
+              >
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={styles.recommendationImage}
+                />
+                <View style={styles.recommendationContent}>
+                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.recommendationTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.recommendationSubtitle}>
+                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            style={{ maxHeight: 300 }}
+            nestedScrollEnabled={true}
+          />
+        </View>
+
+         {/* Berita Section */}
+         <View style={styles.section}>
+          <View style={styles.breakingNewsHeader}>
+            <Text style={styles.sectionTitle}>Acara</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={BeritAcara} // Data rekomendasi
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.recommendationCard}
+                onPress={() =>
+                  navigation.navigate("ArticleScreen", { slug: item.slug })
+                }
+              >
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={styles.recommendationImage}
+                />
+                <View style={styles.recommendationContent}>
+                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.recommendationTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.recommendationSubtitle}>
+                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            style={{ maxHeight: 300 }}
+            nestedScrollEnabled={true}
           />
         </View>
 
