@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import { format, isToday, parseISO } from "date-fns";
 import api from "../src/utils/api";
@@ -114,19 +115,21 @@ const MessagesScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Messages</Text>
-      <Text style={styles.subHeader}>
-        {messages.length > 0
-          ? `You have ${messages.length} messages`
-          : "No messages"}
-      </Text>
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-      />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <Text style={styles.header}>Messages</Text>
+        <Text style={styles.subHeader}>
+          {messages.length > 0
+            ? `You have ${messages.length} messages`
+            : "No messages"}
+        </Text>
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 

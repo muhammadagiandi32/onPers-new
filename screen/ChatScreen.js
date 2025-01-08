@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,125 +6,158 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../src/utils/api";
 
 const ChatScreen = ({ route, navigation }) => {
-  const { email, name, to } = route.params; // Assumes email is passed in params
+  const { email, name, to } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const scrollViewRef = useRef(null);
+  const socket = useRef(null);
   useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await api.get(`/messages/${email}/${to}`);
+        const sortedMessages = Array.isArray(response.data.data)
+          ? response.data.data.sort(
+              (a, b) => new Date(a.created_at) - new Date(b.created_at)
+            )
+          : [];
+        setMessages((prevMessages) => {
+          // Periksa apakah ada perubahan pada pesan
+          if (JSON.stringify(prevMessages) !== JSON.stringify(sortedMessages)) {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+            return sortedMessages;
+          }
+          return prevMessages;
+        });
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+
+    // Panggil fetchMessages pertama kali
     fetchMessages();
-  }, []);
+
+    // Set interval untuk polling
+    const interval = setInterval(fetchMessages, 3000); // Setiap 3 detik
+
+    // Bersihkan interval saat komponen unmount
+    return () => clearInterval(interval);
+  }, [email, to]);
 
   const fetchMessages = async () => {
     try {
       const response = await api.get(`/messages/${email}/${to}`);
-      console.log("Fetched messages:", response.data);
-
-      // Pastikan mengambil `data` dari respons
-      setMessages(Array.isArray(response.data.data) ? response.data.data : []);
+      const sortedMessages = Array.isArray(response.data.data)
+        ? response.data.data.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          )
+        : [];
+      setMessages(sortedMessages);
     } catch (error) {
-      console.log("Error fetching messages", error);
-      setMessages([]); // Set ke array kosong jika terjadi error
+      console.error("Error fetching messages:", error);
+      setMessages([]);
     }
   };
-
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
     try {
-      // Ambil email pengirim dari AsyncStorage
-      // const senderEmail = await AsyncStorage.getItem("user_email"); // Pastikan email pengirim disimpan saat login
-
-      if (!email) {
-        console.error("No sender email found");
-        return;
-      }
-
-      // Data yang akan dikirim
       const messageData = {
-        sender: email, // Email pengirim
-        to: to, // Email penerima
-        message: newMessage, // Pesan yang diketik
+        sender: email,
+        to: to,
+        message: newMessage,
       };
 
-      // Kirim data ke endpoint backend
+      // Kirim pesan ke server via REST API
       await api.post("/messages/post", messageData);
 
-      // Perbarui daftar pesan lokal
+      // Tambahkan pesan lokal
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           ...messageData,
           sender_email: email,
-          id: Math.random().toString(), // ID sementara untuk UI
+          id: Math.random().toString(),
           created_at: new Date().toISOString(),
         },
       ]);
 
-      // Reset input
       setNewMessage("");
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     } catch (error) {
       console.error("Error sending message", error);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("MessagesScreen")}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.chatName}>{name}</Text>
-          <Text style={styles.chatStatus}>Online now</Text>
-        </View>
-        <TouchableOpacity>
-          <Ionicons name="call" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={styles.chatContent}>
-        {Array.isArray(messages) && messages.length > 0 ? (
-          messages.map((message, index) => (
-            <View
-              key={message.id || index}
-              style={[
-                styles.messageBubble,
-                message.sender === email ? styles.you : styles.other, // Periksa pengirim
-              ]}
-            >
-              <Text style={styles.messageText}>{message.message}</Text>
-              {/* Tampilkan pesan */}
-              <Text style={styles.messageTime}>
-                {new Date(message.created_at).getTime() >
-                new Date().getTime() - 60000
-                  ? "Now" // Jika pesan dikirim dalam 1 menit terakhir
-                  : new Date(message.created_at).toLocaleTimeString()}{" "}
-                {/* Format waktu */}
-              </Text>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 1 : 80} // Offset untuk Android
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("MessagesScreen")}
+              >
+                <Ionicons name="arrow-back" size={24} color="#007AFF" />
+              </TouchableOpacity>
+              <View style={styles.headerContent}>
+                <Text style={styles.chatName}>{name}</Text>
+                <Text style={styles.chatStatus}>Online now</Text>
+              </View>
+              <TouchableOpacity>
+                <Ionicons name="call" size={24} color="#007AFF" />
+              </TouchableOpacity>
             </View>
-          ))
-        ) : (
-          <Text style={{ textAlign: "center", color: "#888", marginTop: 20 }}>
-            No messages yet.
-          </Text>
-        )}
-      </ScrollView>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type your message"
-          value={newMessage}
-          onChangeText={setNewMessage}
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Ionicons name="send" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </View>
+            <ScrollView
+              ref={scrollViewRef}
+              contentContainerStyle={styles.chatContent}
+              onContentSizeChange={() =>
+                scrollViewRef.current?.scrollToEnd({ animated: true })
+              }
+            >
+              {messages.map((message, index) => (
+                <View
+                  key={message.id || index}
+                  style={[
+                    styles.messageBubble,
+                    message.sender === email ? styles.you : styles.other,
+                  ]}
+                >
+                  <Text style={styles.messageText}>{message.message}</Text>
+                  <Text style={styles.messageTime}>
+                    {new Date(message.created_at).toLocaleTimeString()}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Type your message"
+                value={newMessage}
+                onChangeText={setNewMessage}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                <Ionicons name="send" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -136,9 +169,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    backgroundColor: "#f9f9f9",
   },
   headerContent: {
     flex: 1,
@@ -147,13 +181,16 @@ const styles = StyleSheet.create({
   chatName: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "#333",
   },
   chatStatus: {
     fontSize: 14,
     color: "#666",
   },
   chatContent: {
-    padding: 20,
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    padding: 10,
   },
   messageBubble: {
     maxWidth: "70%",
@@ -179,12 +216,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignSelf: "flex-end",
   },
+  noMessages: {
+    textAlign: "center",
+    color: "#888",
+    marginTop: 20,
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+    backgroundColor: "#f9f9f9",
   },
   input: {
     flex: 1,

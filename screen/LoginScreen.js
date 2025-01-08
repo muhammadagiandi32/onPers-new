@@ -9,13 +9,11 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../src/utils/api";
-// import { useNavigation } from "@react-navigation/native";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  // const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -43,7 +41,8 @@ const LoginScreen = ({ navigation }) => {
       await AsyncStorage.setItem("access_token", access_token);
 
       Alert.alert("Success", `Welcome, ${user.name}!`);
-      navigation.navigate("HomeScreen");
+      // Navigasi ke layar Home yang ada dalam Tab.Navigator
+      setIsLoggedIn(true);
     } catch (error) {
       console.log("Login Error:", error);
       console.log("Error Response:", error.response?.data);

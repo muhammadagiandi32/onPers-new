@@ -127,7 +127,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Profile"
-            component={ProfileStack}
+            children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
             options={{ headerShown: false }}
           />
         </Tab.Navigator>
@@ -136,7 +136,7 @@ export default function App() {
           {/* Login hanya tersedia di Stack.Navigator saat belum login */}
           <Stack.Screen
             name="Login"
-            component={LoginScreen}
+            children={() => <LoginScreen setIsLoggedIn={setIsLoggedIn} />}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

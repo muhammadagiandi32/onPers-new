@@ -11,8 +11,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../src/utils/api"; // Mengimpor instance API
 import { useNavigation } from "@react-navigation/native";
 
-const ProfileScreen = () => {
-  const navigation = useNavigation(); // Pindahkan ke level komponen
+const ProfileScreen = ({ setIsLoggedIn }) => {
+  // Pindahkan ke level komponen
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
     try {
@@ -22,33 +23,26 @@ const ProfileScreen = () => {
 
       if (!token) {
         Alert.alert("Logout Failed", "No token found. Please log in again.");
-        // return;
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Login" }], // Pastikan nama sesuai dengan Stack.Navigator
-        });
+        setIsLoggedIn(false); // Pastikan status login direset
+        return;
       }
 
       // Panggil API logout
-      // await api.post(
-      //   "/logout",
-      //   {}, // Body kosong untuk logout
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   }
-      // );
+      await api.post(
+        "/logout",
+        {}, // Body kosong untuk logout
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // Hapus token dari AsyncStorage
       await AsyncStorage.removeItem("access_token");
       // console.log("Token removed from AsyncStorage");
-
+      setIsLoggedIn(false);
       // Reset navigasi ke layar Login
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }], // Pastikan nama sesuai dengan Stack.Navigator
-      });
     } catch (error) {
       console.error("Error logging out:", error);
 
