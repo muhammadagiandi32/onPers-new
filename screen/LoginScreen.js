@@ -28,7 +28,7 @@ const LoginScreen = ({ setIsLoggedIn }) => {
         email: email,
         password: password,
       };
-
+      console.log("REACT_APP_API_DEVICE:", process.env.REACT_APP_API_DEVICE);
       console.log("Request Body:", requestBody);
       // console.log("Base URL:", api.defaults.baseURL);
       console.log("Full URL:", `${api.defaults.baseURL}/login`);

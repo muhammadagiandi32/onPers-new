@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState }  from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../src/utils/api"; // Mengimpor instance API
@@ -14,6 +15,9 @@ import { useNavigation } from "@react-navigation/native";
 const ProfileScreen = ({ setIsLoggedIn }) => {
   // Pindahkan ke level komponen
   const navigation = useNavigation();
+  const [user, setUser] = useState(null); // State untuk menyimpan data pengguna
+  const [loading, setLoading] = useState(true); // State untuk indikator loading
+
 
   const handleLogout = async () => {
     try {
@@ -54,14 +58,59 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
     }
   };
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("access_token");
+        if (!token) {
+          Alert.alert("Error", "No access token found. Please log in again.");
+          setIsLoggedIn(false);
+          return;
+        }
+
+        const response = await api.get("/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setUser(response.data.user);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        Alert.alert("Error", "Failed to fetch user data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load user data.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Image
         source={{ uri: "https://source.unsplash.com/random/100x100" }}
         style={styles.profileImage}
       />
-      <Text style={styles.name}>John Doe</Text>
-      <Text style={styles.position}>Software Engineer</Text>
+      <Text style={styles.name}>{user.name}</Text>
+      <Text style={styles.position}>{user.media}</Text>
       <View style={styles.statsContainer}>
         <View style={styles.statsItem}>
           <Text style={styles.statsValue}>120</Text>
@@ -88,20 +137,8 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
       </TouchableOpacity>
 
       <View style={styles.divider} />
-      <Text style={styles.sectionTitle}>About</Text>
-      <Text style={styles.sectionContent}>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat.
-      </Text>
-      <View style={styles.divider} />
       <Text style={styles.sectionTitle}>Contact</Text>
-      <Text style={styles.sectionContent}>Email: john.doe@example.com</Text>
-      <Text style={styles.sectionContent}>Phone: +1 123 456 7890</Text>
-      <Text style={styles.sectionContent}>
-        Address: 123 Main St, Anytown USA
-      </Text>
+      <Text style={styles.sectionContent}>Email: {user.email}</Text>
     </View>
   );
 };

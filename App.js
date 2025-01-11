@@ -12,6 +12,7 @@ import ArticleScreen from "./screen/ArticleScreen";
 import LoginScreen from "./screen/LoginScreen";
 import MessagesScreen from "./screen/MessagesScreen"; // Import MessagesScreen
 import ChatScreen from "./screen/ChatScreen"; // Import ChatScreen
+import CreateArticleScreen from "./screen/CreateArticleScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -65,6 +66,19 @@ function MessagesStack() {
   );
 }
 
+// Messages Stack Navigator
+function CreateArticleStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="CreateArtickeScreen"
+        component={CreateArticleScreen}
+        options={{ title: "Create", headerShown: false }}
+      />
+      
+    </Stack.Navigator>
+  );
+}
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(null); // Status login pengguna
 
@@ -107,6 +121,8 @@ export default function App() {
                 iconName = focused ? "person" : "person-outline";
               } else if (route.name === "Messages") {
                 iconName = focused ? "chatbubble" : "chatbubble-outline";
+              } else if (route.name === "CreateArticle") {
+                iconName = focused ? "document-text" : "document-text-outline";
               }
 
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -123,6 +139,11 @@ export default function App() {
           <Tab.Screen
             name="Messages"
             component={MessagesStack} // Gunakan MessagesStack
+            options={{ headerShown: false }}
+          />
+           <Tab.Screen
+            name="CreateArticle"
+            component={CreateArticleStack} // Gunakan MessagesStack
             options={{ headerShown: false }}
           />
           <Tab.Screen
