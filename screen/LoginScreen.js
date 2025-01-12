@@ -8,12 +8,16 @@ import {
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+
 import api from "../src/utils/api";
 
 const LoginScreen = ({ setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -30,7 +34,6 @@ const LoginScreen = ({ setIsLoggedIn }) => {
       };
       console.log("REACT_APP_API_DEVICE:", process.env.REACT_APP_API_DEVICE);
       console.log("Request Body:", requestBody);
-      // console.log("Base URL:", api.defaults.baseURL);
       console.log("Full URL:", `${api.defaults.baseURL}/login`);
 
       const response = await api.post("/login", requestBody);
@@ -41,7 +44,6 @@ const LoginScreen = ({ setIsLoggedIn }) => {
       await AsyncStorage.setItem("access_token", access_token);
 
       Alert.alert("Success", `Welcome, ${user.name}!`);
-      // Navigasi ke layar Home yang ada dalam Tab.Navigator
       setIsLoggedIn(true);
     } catch (error) {
       console.log("Login Error:", error);
@@ -51,6 +53,10 @@ const LoginScreen = ({ setIsLoggedIn }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const navigateToRegister = () => {
+    navigation.navigate("RegisterScreen"); // Pastikan RegisterScreen sudah diatur di navigator Anda
   };
 
   return (
@@ -78,6 +84,12 @@ const LoginScreen = ({ setIsLoggedIn }) => {
         <Text style={styles.buttonText}>
           {loading ? "Logging in..." : "Login"}
         </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={navigateToRegister}
+      >
+        <Text style={styles.registerText}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </View>
   );
@@ -111,10 +123,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#007bff",
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 10,
   },
   buttonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  registerButton: {
+    marginTop: 10,
+  },
+  registerText: {
+    color: "#007bff",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });

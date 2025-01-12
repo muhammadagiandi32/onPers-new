@@ -13,6 +13,7 @@ import LoginScreen from "./screen/LoginScreen";
 import MessagesScreen from "./screen/MessagesScreen"; // Import MessagesScreen
 import ChatScreen from "./screen/ChatScreen"; // Import ChatScreen
 import CreateArticleScreen from "./screen/CreateArticleScreen";
+import RegisterScreen from "./screen/RegisterScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -75,7 +76,6 @@ function CreateArticleStack() {
         component={CreateArticleScreen}
         options={{ title: "Create", headerShown: false }}
       />
-      
     </Stack.Navigator>
   );
 }
@@ -141,7 +141,7 @@ export default function App() {
             component={MessagesStack} // Gunakan MessagesStack
             options={{ headerShown: false }}
           />
-           <Tab.Screen
+          <Tab.Screen
             name="CreateArticle"
             component={CreateArticleStack} // Gunakan MessagesStack
             options={{ headerShown: false }}
@@ -158,6 +158,11 @@ export default function App() {
           <Stack.Screen
             name="Login"
             children={() => <LoginScreen setIsLoggedIn={setIsLoggedIn} />}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RegisterScreen"
+            component={RegisterScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
