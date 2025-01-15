@@ -29,25 +29,20 @@ const HomeScreen = ({ navigation }) => {
   const [filteredRecommendations, setFilteredRecommendations] = useState([]);
 
   // News By category and BreakingNews
-  const [BeritaAdvertorial, setBeritaAdvertorial] = useState([]);
-  const [BeritaRilis, setBeritaRilis] = useState([]);
+  const [BeritaHeadline, setBeritaHeadline] = useState([]);
   const [BeritaBerita, setBeritBerita] = useState([]);
   const [BeritAcara, setBeritAcara] = useState([]);
+  const [BeritaAdvertorial, setBeritaAdvertorial] = useState([]);
   const [BreakingNews, setBereakingNews] = useState([]);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const advertorialNews = await api.get("/news/category", {
-          params: { category: "Advertorial" },
+          params: { category: "Headline" },
         });
-        setBeritaAdvertorial(advertorialNews.data.data);
-
-        const rilisNews = await api.get("/news/category", {
-          params: { category: "Rilis" },
-        });
-        setBeritaRilis(rilisNews.data.data);
-
+        setBeritaHeadline(advertorialNews.data.data);
+        
         const beritaNews = await api.get("/news/category", {
           params: { category: "Berita" },
         });
@@ -57,6 +52,11 @@ const HomeScreen = ({ navigation }) => {
           params: { category: "Acara" },
         });
         setBeritAcara(acaraNews.data.data);
+
+        const BeritaAdvertorial = await api.get("/news/category", {
+          params: { category: "Advertorial" },
+        });
+        setBeritaAdvertorial(BeritaAdvertorial.data.data);
 
         const breakingNews = await api.get("/breaking-news");
         setBereakingNews(breakingNews.data.data);
@@ -97,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
         resizeMode="cover"
       />
       <View style={styles.breakingOverlay}>
-        <Text style={styles.categoryTag}>Sports</Text>
+        <Text style={styles.categoryTag}>{item.category_name}</Text>
         <Text style={styles.breakingTitle}>{item.title}</Text>
       </View>
     </TouchableOpacity>
@@ -106,14 +106,35 @@ const HomeScreen = ({ navigation }) => {
   // Video
   const { width: SCREEN_WIDTH } = Dimensions.get("window");
   const VideoCard = ({ videoUri }) => {
+    const [isMuted, setIsMuted] = useState(true); // Default mute
     return (
-      <Video
-        source={{ uri: videoUri }}
-        style={[styles.video, { width: SCREEN_WIDTH - 1 }]} // Lebar dinamis
-        resizeMode="cover"
-        isLooping
-        shouldPlay
-      />
+      <View style={styles.videoContainer}>
+        {/* Video */}
+        <Video
+          source={{ uri: videoUri }}
+          style={[styles.video, { width: SCREEN_WIDTH - 0 }]} // Lebar dinamis
+          resizeMode="cover"
+          shouldPlay={true} // Video langsung diputar
+          isLooping={true} // Video diputar terus-menerus
+          isMuted={isMuted} // Mengontrol status mute
+          useNativeControls={false} // Nonaktifkan kontrol bawaan
+        />
+
+        {/* Ikon Mute/Unmute */}
+        <TouchableOpacity
+          style={styles.muteIconContainer}
+          onPress={() => setIsMuted((prev) => !prev)} // Toggle mute/unmute
+        >
+          <Image
+            source={
+              isMuted
+                ? require("../assets/mute.png") // Ganti dengan path ikon mute
+                : require("../assets/unmute.png") // Ganti dengan path ikon unmute
+            }
+            style={styles.muteIcon}
+          />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -319,7 +340,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={BeritaAdvertorial} // Data rekomendasi
+            data={BeritaHeadline} // Data rekomendasi
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -333,7 +354,7 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.recommendationImage}
                 />
                 <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.categoryTag}>{item.name}</Text>
                   <Text style={styles.recommendationTitle} numberOfLines={2}>
                     {item.title}
                   </Text>
@@ -370,7 +391,7 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.recommendationImage}
                 />
                 <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.categoryTag}>{item.name}</Text>
                   <Text style={styles.recommendationTitle} numberOfLines={2}>
                     {item.title}
                   </Text>
@@ -384,44 +405,6 @@ const HomeScreen = ({ navigation }) => {
             nestedScrollEnabled={true}
           />
         </View>
-
-        {/* Rilis Section */}
-        {/* <View style={styles.section}>
-          <View style={styles.breakingNewsHeader}>
-            <Text style={styles.sectionTitle}>Rilis</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View all</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={BeritaRilis} // Data rekomendasi
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.recommendationCard}
-                onPress={() =>
-                  navigation.navigate("ArticleScreen", { slug: item.slug })
-                }
-              >
-                <Image
-                  source={{ uri: item.image_url }}
-                  style={styles.recommendationImage}
-                />
-                <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>Education</Text>
-                  <Text style={styles.recommendationTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.recommendationSubtitle}>
-                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
-            nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
-          />
-        </View> */}
 
         {/* Acara Section */}
         <View style={styles.section}>
@@ -446,7 +429,8 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.recommendationImage}
                 />
                 <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.categoryTag}>{item.name}</Text>
+
                   <Text style={styles.recommendationTitle} numberOfLines={2}>
                     {item.title}
                   </Text>
@@ -484,7 +468,7 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.recommendationImage}
                 />
                 <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>Education</Text>
+                  <Text style={styles.categoryTag}>{item.name}</Text>
                   <Text style={styles.recommendationTitle} numberOfLines={2}>
                     {item.title}
                   </Text>
@@ -721,6 +705,19 @@ const styles = StyleSheet.create({
   video: {
     height: 200, // Tinggi video
     backgroundColor: "#000", // Latar belakang hitam untuk loading video
+  },
+  muteIconContainer: {
+    position: "absolute",
+    bottom: 10, // Jarak dari bawah video
+    right: 10, // Jarak dari kanan video
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Latar belakang hitam transparan
+    borderRadius: 20,
+    padding: 5,
+  },
+  muteIcon: {
+    width: 24,
+    height: 24,
+    tintColor: "#fff", // Warna ikon (jika menggunakan gambar yang mendukung tintColor)
   },
 });
 

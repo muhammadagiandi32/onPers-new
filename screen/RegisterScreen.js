@@ -92,7 +92,7 @@ const RegisterScreen = () => {
         </Picker>
       </View>
 
-      <Text style={styles.label}>Media Name</Text>
+      <Text style={styles.label}>Media / Instansi</Text>
       <TextInput
         style={styles.input}
         placeholder="Media (e.g., onPers)"

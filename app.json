@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "onPers-new",
-    "slug": "onPers-new",
+    "name": "onPers",
+    "slug": "onPers",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon-onpers.png",

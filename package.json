@@ -22,6 +22,7 @@
     "dotenv": "^16.4.7",
     "expo": "^52.0.0",
     "expo-av": "~15.0.1",
+    "expo-document-picker": "~13.0.2",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -32,10 +33,9 @@
     "react-native-select-dropdown": "^4.0.1",
     "react-native-video": "^6.9.0",
     "react-native-web": "~0.19.6",
-    "react-native-webview": "^13.12.5",
+    "react-native-webview": "^13.13.1",
     "twrnc": "^4.2.0",
-    "typescript": "5.4.5",
-    "expo-document-picker": "~13.0.2"
+    "typescript": "5.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

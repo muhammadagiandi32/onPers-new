@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -13,8 +13,9 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
-import api from "../src/utils/api"; // Import API instance
-import { Picker } from "@react-native-picker/picker"; // Import Picker
+import api from "../src/utils/api";
+import { Picker } from "@react-native-picker/picker";
+import { WebView } from "react-native-webview";
 
 const CreateArticleScreen = () => {
   const [title, setTitle] = useState("");
@@ -23,14 +24,17 @@ const CreateArticleScreen = () => {
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const webViewRef = useRef(null);
 
-  // Fetch daftar kategori dari server
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await api.get("/category-name"); // Ganti endpoint sesuai backend Anda
         if (response.data.success) {
-          setCategories(response.data.data);
+          const filteredCategories = response.data.data.filter((cat) =>
+            ["Berita", "Acara"].includes(cat.name)
+          );
+          setCategories(filteredCategories);
         } else {
           Alert.alert("Error", "Failed to fetch categories.");
         }
@@ -42,6 +46,58 @@ const CreateArticleScreen = () => {
 
     fetchCategories();
   }, []);
+
+  const quillHtmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Quill Editor</title>
+      <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+      <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        #editor-container {
+          flex: 1;
+          margin: 20px;
+          height: 300px;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="editor-container"></div>
+     <script>
+        const quill = new Quill('#editor-container', {
+          theme: 'snow',
+          placeholder: 'Start typing here...',
+        });
+
+        window.getEditorContent = function () {
+          const content = quill.root.innerHTML;
+          console.log("getEditorContent called. Content:", content);
+          return content;
+        };
+
+        // Kirim data ke React Native setiap kali konten berubah
+        quill.on('text-change', () => {
+          const content = quill.root.innerHTML;
+          console.log("Content changed:", content);
+          window.ReactNativeWebView.postMessage(content);
+        });
+      </script>
+
+
+    </body>
+    </html>
+  `;
 
   const handleFilePicker = async () => {
     try {
@@ -66,59 +122,94 @@ const CreateArticleScreen = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!title || !content || !category || !image) {
-      Alert.alert("Error", "Please fill all required fields.");
-      return;
-    }
+ const handleSubmit = async () => {
+   console.log("Handle Submit button pressed");
 
-    setLoading(true);
+   if (!title || !category || !image || !content) {
+     console.log("Validation failed:");
+     console.log("Title:", title);
+     console.log("Category:", category);
+     console.log("Image:", image);
+     console.log("Content:", content);
+     Alert.alert("Error", "Please fill all required fields.");
+     return;
+   }
 
-    try {
-      const token = await AsyncStorage.getItem("access_token");
-      if (!token) {
-        Alert.alert("Error", "User is not authenticated.");
-        setLoading(false);
-        return;
-      }
+   console.log("Content from state before submit:", content);
+   if (!content || content.trim() === "<p><br></p>") {
+     console.log("Invalid content detected before submit:", content);
+     Alert.alert("Error", "Content cannot be empty.");
+     setLoading(false);
+     return;
+   }
 
-      const formData = new FormData();
-      formData.append("judul_berita", title);
-      formData.append("content", content);
-      formData.append("category", category); // Mengirim UUID kategori
-      formData.append("gambar", {
-        uri: image.uri,
-        type: image.mimeType || "image/jpeg",
-        name: image.name,
-      });
+   setLoading(true);
 
-      const response = await api.post("/post-berita", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+   try {
+     console.log("Fetching token...");
+     const token = await AsyncStorage.getItem("access_token");
+     console.log("Token fetched:", token);
+     if (!token) {
+       Alert.alert("Error", "User is not authenticated.");
+       setLoading(false);
+       return;
+     }
 
-      setLoading(false);
+     console.log("Preparing FormData...");
+     const formData = new FormData();
+     formData.append("judul_berita", title);
+     formData.append("content", content);
+     formData.append("category", category);
+     formData.append("gambar", {
+       uri: image.uri,
+       type: image.mimeType || "image/jpeg",
+       name: image.name,
+     });
 
-      if (response.status === 201) {
-        Alert.alert("Success", "Article submitted successfully!");
-        setTitle("");
-        setContent("");
-        setCategory("");
-        setImage(null);
-      } else {
-        Alert.alert("Error", "Failed to submit article.");
-      }
-    } catch (error) {
-      console.error("Error submitting article:", error);
-      setLoading(false);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "An error occurred while submitting."
-      );
-    }
-  };
+     console.log("FormData prepared:");
+     for (const pair of formData.entries()) {
+       console.log(`${pair[0]}: ${pair[1]}`);
+     }
+
+     console.log("Sending data to endpoint...");
+     const response = await api.post("/post-berita", formData, {
+       headers: {
+         Authorization: `Bearer ${token}`,
+         "Content-Type": "multipart/form-data",
+       },
+     });
+
+     console.log("Response received:", response);
+
+     setLoading(false);
+
+     if (response.status === 201) {
+       Alert.alert("Success", "Article submitted successfully!");
+       setTitle("");
+       setContent("");
+       setCategory("");
+       setImage(null);
+     } else {
+       Alert.alert("Error", "Failed to submit article.");
+     }
+   } catch (error) {
+     console.error("Error submitting article:", error);
+
+     if (error.response) {
+       console.log("Error response data:", error.response.data);
+       console.log("Error response status:", error.response.status);
+       console.log("Error response headers:", error.response.headers);
+     }
+
+     setLoading(false);
+     Alert.alert(
+       "Error",
+       error.response?.data?.message || "An error occurred while submitting."
+     );
+   }
+ };
+
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -137,31 +228,46 @@ const CreateArticleScreen = () => {
         </View>
 
         {/* Category */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Category</Text>
-          <Picker
-            selectedValue={category}
-            onValueChange={(itemValue) => setCategory(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select a category" value="" />
-            {categories.map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-            ))}
-          </Picker>
-        </View>
+        <Picker
+          selectedValue={category}
+          onValueChange={(itemValue) => setCategory(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select a category" value="" />
+          {categories.map((cat) => (
+            <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+          ))}
+        </Picker>
 
         {/* Content */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Content</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter the Content"
-            value={content}
-            onChangeText={setContent}
-            multiline
-          />
-        </View>
+        <WebView
+          ref={webViewRef}
+          originWhitelist={["*"]}
+          source={{ html: quillHtmlContent }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          onMessage={(event) => {
+            const htmlContent = event.nativeEvent.data;
+            console.log(
+              "Data received from WebView in onMessage:",
+              htmlContent
+            );
+
+            if (!htmlContent || htmlContent.trim() === "<p><br></p>") {
+              console.log("Empty content received:", htmlContent);
+              Alert.alert("Error", "Content cannot be empty.");
+              return;
+            }
+
+            // Simpan konten ke state
+            setContent(htmlContent);
+            console.log("Content saved to state:", htmlContent);
+          }}
+          onLoadEnd={() => {
+            console.log("WebView finished loading");
+          }}
+          style={{ height: 350 }}
+        />
 
         {/* Image */}
         <View style={styles.inputGroup}>
