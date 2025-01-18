@@ -407,83 +407,103 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Acara Section */}
-        <View style={styles.section}>
-          <View style={styles.breakingNewsHeader}>
-            <Text style={styles.sectionTitle}>Acara</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View all</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={BeritAcara} // Data rekomendasi
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.recommendationCard}
-                onPress={() =>
-                  navigation.navigate("ArticleScreen", { slug: item.slug })
-                }
-              >
-                <Image
-                  source={{ uri: item.image_url }}
-                  style={styles.recommendationImage}
-                />
-                <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>{item.name}</Text>
 
-                  <Text style={styles.recommendationTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.recommendationSubtitle}>
-                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
-                  </Text>
-                </View>
+        {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <View style={styles.section}>
+            <View style={styles.breakingNewsHeader}>
+              <Text style={styles.sectionTitle}>Acara</Text>
+              <TouchableOpacity  onPress={() =>
+                    navigation.navigate("ViewAllScreen",{ category: 'Acara' })
+                  }>
+                <Text style={styles.viewAll}>View all</Text>
               </TouchableOpacity>
-            )}
-            style={{ maxHeight: 300 }}
-            nestedScrollEnabled={true}
-          />
-        </View>
+            </View>
+            <FlatList
+              data={BeritAcara} // Data rekomendasi
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.recommendationCard}
+                  onPress={() =>
+                    navigation.navigate("ArticleScreen", { slug: item.slug })
+                  }
+                >
+                  <Image
+                    source={{ uri: item.image_url }}
+                    style={styles.recommendationImage}
+                  />
+                  <View style={styles.recommendationContent}>
+                    <Text style={styles.categoryTag}>{item.name}</Text>
+  
+                    <Text style={styles.recommendationTitle} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.recommendationSubtitle}>
+                      {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              style={{ maxHeight: 300 }}
+              nestedScrollEnabled={true}
+            />
+          </View>
+          )}
 
         {/* Advertorial Section */}
-        <View style={styles.section}>
-          <View style={styles.breakingNewsHeader}>
-            <Text style={styles.sectionTitle}>Advertorial</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View all</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={BeritaAdvertorial} // Data rekomendasi
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.recommendationCard}
-                onPress={() =>
-                  navigation.navigate("ArticleScreen", { slug: item.slug })
-                }
-              >
-                <Image
-                  source={{ uri: item.image_url }}
-                  style={styles.recommendationImage}
-                />
-                <View style={styles.recommendationContent}>
-                  <Text style={styles.categoryTag}>{item.name}</Text>
-                  <Text style={styles.recommendationTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.recommendationSubtitle}>
-                    {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
-                  </Text>
-                </View>
+
+        {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <View style={styles.section}>
+            <View style={styles.breakingNewsHeader}>
+              <Text style={styles.sectionTitle}>Advertorial</Text>
+              <TouchableOpacity  onPress={() =>
+                    navigation.navigate("ViewAllScreen",{ category: 'Advertorial' })
+                  }>
+                <Text style={styles.viewAll}>View all</Text>
               </TouchableOpacity>
-            )}
-            style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
-            nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
-          />
-        </View>
+            </View>
+            <FlatList
+              data={BeritaAdvertorial} // Data rekomendasi
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.recommendationCard}
+                  onPress={() =>
+                    navigation.navigate("ArticleScreen", { slug: item.slug })
+                  }
+                >
+                  <Image
+                    source={{ uri: item.image_url }}
+                    style={styles.recommendationImage}
+                  />
+                  <View style={styles.recommendationContent}>
+                    <Text style={styles.categoryTag}>{item.name}</Text>
+                    <Text style={styles.recommendationTitle} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.recommendationSubtitle}>
+                      {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              style={{ maxHeight: 300 }} // Batasi tinggi FlatList agar tidak memenuhi layar
+              nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
+            />
+          </View>
+          )}
         {/* Featured Promotions Section */}
-        <PromotionSection />
+
+        {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <PromotionSection />
+          )}
+
       </ScrollView>
     </SafeAreaView>
   );
