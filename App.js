@@ -14,6 +14,7 @@ import MessagesScreen from "./screen/MessagesScreen"; // Import MessagesScreen
 import ChatScreen from "./screen/ChatScreen"; // Import ChatScreen
 import CreateArticleScreen from "./screen/CreateArticleScreen";
 import RegisterScreen from "./screen/RegisterScreen";
+import ViewAllScreen from "./screen/ViewAllScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,6 +32,11 @@ function HomeStack() {
         name="ArticleScreen"
         component={ArticleScreen}
         options={{ title: "Article", headerShown: false }}
+      />
+      <Stack.Screen
+        name="ViewAllScreen"
+        component={ViewAllScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
