@@ -6,66 +6,109 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  TextInput,
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import api from "../src/utils/api";
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import ikon
+import api from '../src/utils/api';
 import { useRoute } from '@react-navigation/native';
 
-
-
-const ViewAllScreen = ({navigation}) => {
+const ViewAllScreen = ({ navigation }) => {
   const { params } = useRoute();
-  const [beriataAllNews, setBeriataAllNews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const category = params?.category; 
+  const category = params?.category;
+  const [allNews, setAllNews] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // Query pencarian
+  const [loading, setLoading] = useState(false); // Loading pencarian
+  const [error, setError] = useState(null); // Error handling
 
-  console.log(category,'param nih');
+  const fetchAllNews = async () => {
+    setLoading(true);
+    try {
+      const category = params?.category;
+      const response = await api.get(
+        `/news/category?category=${category}&viewAll=y`
+      );
+      setAllNews(response.data.data);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      setError('Unable to load news.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const response = await api.get(`/news/category?category=${category}&viewAll=y`);
-        console.log("sukses get data");
-        setBeriataAllNews(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching news:", error);
-        setLoading(false);
-      }
-    };
+    fetchAllNews();
+  }, [category]);
 
-    fetchNews();
-  },[category]);
+  const handleSearch = async (query) => {
+    console.log(query, 'query query query');
+    setSearchQuery(query);
+  
+    if (query.trim() === '') {
+      // Reset data jika input kosong
+      fetchAllNews();
+      return;
+    }
+  
+    setLoading(true);
+    try {
+      const response = await api.get(`/news/search?name=${query}`);
+      
+      // Validasi data dari response
+      const searchResults = response.data?.data || []; // Gunakan default array kosong jika undefined
+  
+      if (Array.isArray(searchResults) && searchResults.length > 0) {
+        setAllNews(searchResults); // Perbarui daftar berita dengan hasil pencarian
+        navigation.navigate('ViewAllScreen', { category: 'All' }); // Aktifkan tab All
+      } else {
+        setAllNews([]); // Kosongkan data jika tidak ada hasil
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+      setError('Search failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderArticle = ({ item }) => (
-    <TouchableOpacity style={styles.articleContainer} onPress={() =>
-        navigation.navigate("ArticleScreen", { slug: item.slug })
-      }>
+    <TouchableOpacity
+      style={styles.articleContainer}
+      onPress={() =>
+        navigation.navigate('ArticleScreen', { slug: item.slug })
+      }
+    >
       <Image source={{ uri: item.image_url }} style={styles.articleImage} />
       <View style={styles.articleContent}>
-        <Text style={styles.articleAuthor}>By {item.author_id || "Unknown"}</Text>
+        <Text style={styles.articleAuthor}>By {item.author_id || 'Unknown'}</Text>
         <Text style={styles.articleTitle}>{item.title}</Text>
-        <Text style={styles.articleTime}>{new Date(item.created_at).toLocaleDateString()}</Text>
+        <Text style={styles.articleTime}>
+          {new Date(item.created_at).toLocaleDateString()}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>News</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity>
-              <Text style={styles.icon}>🔍</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.icon}>🙂</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>News</Text>
+      </View>
 
-        <View style={styles.tabBar}>
+      {/* Search Bar */}
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search articles..."
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+        <Icon name="search" size={20} color="#999999" style={styles.searchIcon} />
+      </View>
+
+      <View style={styles.tabBar}>
             <TouchableOpacity onPress={() => navigation.navigate("ViewAllScreen", { category: 'All' })}>
                 <Text style={[styles.tabItem, category === 'All' && styles.activeTab]}>All</Text>
             </TouchableOpacity>
@@ -80,17 +123,18 @@ const ViewAllScreen = ({navigation}) => {
             </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#FF4C4C" style={styles.loader} />
-        ) : (
-          <FlatList
-            data={beriataAllNews}
-            renderItem={renderArticle}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.articleList}
-          />
-        )}
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#FF4C4C" style={styles.loader} />
+      ) : error ? (
+        <Text style={styles.errorMessage}>{error}</Text>
+      ) : (
+        <FlatList
+          data={allNews}
+          renderItem={renderArticle}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.articleList}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -176,6 +220,24 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 20,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#F9F9F9',
+  },
+  searchBar: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+  },
+  searchIcon: {
+    marginLeft: 8,
   },
 });
 
