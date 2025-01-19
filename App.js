@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -15,6 +15,8 @@ import ChatScreen from "./screen/ChatScreen"; // Import ChatScreen
 import CreateArticleScreen from "./screen/CreateArticleScreen";
 import RegisterScreen from "./screen/RegisterScreen";
 import ViewAllScreen from "./screen/ViewAllScreen";
+import EditArticleScreen from "./screen/EditArticleScreen";
+import EditViewScreen from "./screen/EditViewScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +38,11 @@ function HomeStack() {
       <Stack.Screen
         name="ViewAllScreen"
         component={ViewAllScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditArticleScreen"
+        component={EditArticleScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
@@ -85,6 +92,7 @@ function CreateArticleStack() {
     </Stack.Navigator>
   );
 }
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(null); // Status login pengguna
 
@@ -127,7 +135,11 @@ export default function App() {
                 iconName = focused ? "person" : "person-outline";
               } else if (route.name === "Messages") {
                 iconName = focused ? "chatbubble" : "chatbubble-outline";
+              } else if (route.name === "Edit") {
+                iconName = focused ? "document-text" : "document-text-outline";
               } else if (route.name === "CreateArticle") {
+                iconName = focused ? "add-circle" : "add-circle-outline";
+              } else if (route.name === "EditArticleScreen") {
                 iconName = focused ? "document-text" : "document-text-outline";
               }
 
@@ -149,7 +161,36 @@ export default function App() {
           />
           <Tab.Screen
             name="CreateArticle"
-            component={CreateArticleStack} // Gunakan MessagesStack
+            component={CreateArticleStack} // Gunakan CreateArticleStack
+            options={{
+              headerShown: false,
+              tabBarButton: (props) => (
+                <TouchableOpacity
+                  {...props}
+                  style={{
+                    top: -3, // Membuat tombol naik ke atas
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#FF4C4C", // Warna lingkaran tombol
+                    borderRadius: 35, // Membuat tombol berbentuk lingkaran
+                    height: 50, // Tinggi lingkaran tombol
+                    width: 50, // Lebar lingkaran tombol
+                    shadowColor: "#000", // Warna bayangan
+                    shadowOffset: { width: 0, height: 10 }, // Posisi bayangan
+                    shadowOpacity: 4, // Transparansi bayangan
+                    shadowRadius: 3, // Jangkauan bayangan
+                    elevation: 3, // Bayangan untuk Android
+                  }}
+                >
+                  <Ionicons name="add" size={36} color="white" />
+                  {/* Ikon "+" */}
+                </TouchableOpacity>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Edit"
+            component={EditViewScreen} // Gunakan EditArticleStack
             options={{ headerShown: false }}
           />
           <Tab.Screen

@@ -42,7 +42,7 @@ const HomeScreen = ({ navigation }) => {
           params: { category: "Berita" },
         });
         setBeritaHeadline(advertorialNews.data.data);
-        
+
         const beritaNews = await api.get("/news/category", {
           params: { category: "Headline" },
         });
@@ -169,16 +169,18 @@ const HomeScreen = ({ navigation }) => {
     const data = [
       {
         id: "1",
-        title: "Diskon 30%",
-        subtitle: "Toko Buah Semoga Berkah, Bendungan Hilir",
-        image: "https://via.placeholder.com/150",
+        title: "",
+        subtitle: "",
+        image:
+          "https://is3.cloudhost.id/onpers-storage/onpers-storage/iklan-apk-1.png",
         ad: true,
       },
       {
         id: "2",
-        title: "Dipesan 10+ kali",
-        subtitle: "Pokonya enak",
-        image: "https://via.placeholder.com/150",
+        title: "",
+        subtitle: "",
+        image:
+          "https://is3.cloudhost.id/onpers-storage/onpers-storage/iklan-apk-2.png",
         ad: false,
       },
     ];
@@ -219,10 +221,10 @@ const HomeScreen = ({ navigation }) => {
                 source={{ uri: item.image }}
                 style={styles.promotionImage}
               />
-              <View style={styles.promotionOverlay}>
+              {/* <View style={styles.promotionOverlay}>
                 <Text style={styles.promotionTitle}>{item.title}</Text>
                 <Text style={styles.promotionSubtitle}>{item.subtitle}</Text>
-              </View>
+              </View> */}
               {item.ad && <Text style={styles.adBadge}>Ad</Text>}
             </View>
           )}
@@ -286,9 +288,6 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.breakingNewsHeader}>
             <Text style={styles.sectionTitle}>Breaking News</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View all</Text>
-            </TouchableOpacity>
           </View>
           {loading ? (
             <ActivityIndicator size="large" color="#007AFF" />
@@ -313,12 +312,12 @@ const HomeScreen = ({ navigation }) => {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {[
-              { id: "1", name: "Wartawan", icon: "person" },
-              { id: "2", name: "Narasumber", icon: "mic" },
-              { id: "3", name: "Humas", icon: "briefcase" },
-              { id: "4", name: "Jasa", icon: "hammer" },
-              { id: "5", name: "Umum", icon: "people" },
-              { id: "6", name: "Info", icon: "information-circle" },
+              { id: "1", name: "Wartawan", icon: "pencil" },
+              { id: "2", name: "Narasumber", icon: "mic-outline" },
+              { id: "3", name: "Humas", icon: "laptop-outline" },
+              { id: "4", name: "Jasa", icon: "briefcase-outline" },
+              { id: "5", name: "Umum", icon: "people-outline" },
+              { id: "6", name: "Info", icon: "information-outline" },
             ].map((category) => (
               <View key={category.id} style={styles.categoryCard}>
                 <TouchableOpacity style={styles.categoryIcon}>
@@ -335,7 +334,11 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.breakingNewsHeader}>
             <Text style={styles.sectionTitle}>Headline</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("ViewAllScreen", { category: "Headline" })
+              }
+            >
               <Text style={styles.viewAll}>View all</Text>
             </TouchableOpacity>
           </View>
@@ -372,7 +375,11 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.breakingNewsHeader}>
             <Text style={styles.sectionTitle}>Berita</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("ViewAllScreen", { category: "Berita" })
+              }
+            >
               <Text style={styles.viewAll}>View all</Text>
             </TouchableOpacity>
           </View>
@@ -409,14 +416,16 @@ const HomeScreen = ({ navigation }) => {
         {/* Acara Section */}
 
         {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" />
-          ) : (
-            <View style={styles.section}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <View style={styles.section}>
             <View style={styles.breakingNewsHeader}>
               <Text style={styles.sectionTitle}>Acara</Text>
-              <TouchableOpacity  onPress={() =>
-                    navigation.navigate("ViewAllScreen",{ category: 'Acara' })
-                  }>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("ViewAllScreen", { category: "Acara" })
+                }
+              >
                 <Text style={styles.viewAll}>View all</Text>
               </TouchableOpacity>
             </View>
@@ -436,7 +445,7 @@ const HomeScreen = ({ navigation }) => {
                   />
                   <View style={styles.recommendationContent}>
                     <Text style={styles.categoryTag}>{item.name}</Text>
-  
+
                     <Text style={styles.recommendationTitle} numberOfLines={2}>
                       {item.title}
                     </Text>
@@ -450,19 +459,23 @@ const HomeScreen = ({ navigation }) => {
               nestedScrollEnabled={true}
             />
           </View>
-          )}
+        )}
 
         {/* Advertorial Section */}
 
         {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" />
-          ) : (
-            <View style={styles.section}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <View style={styles.section}>
             <View style={styles.breakingNewsHeader}>
               <Text style={styles.sectionTitle}>Advertorial</Text>
-              <TouchableOpacity  onPress={() =>
-                    navigation.navigate("ViewAllScreen",{ category: 'Advertorial' })
-                  }>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("ViewAllScreen", {
+                    category: "Advertorial",
+                  })
+                }
+              >
                 <Text style={styles.viewAll}>View all</Text>
               </TouchableOpacity>
             </View>
@@ -495,15 +508,14 @@ const HomeScreen = ({ navigation }) => {
               nestedScrollEnabled={true} // Aktifkan pengguliran bersarang
             />
           </View>
-          )}
+        )}
         {/* Featured Promotions Section */}
 
         {loading ? (
-            <ActivityIndicator size="large" color="#007AFF" />
-          ) : (
-            <PromotionSection />
-          )}
-
+          <ActivityIndicator size="large" color="#007AFF" />
+        ) : (
+          <PromotionSection />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -666,8 +678,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   promotionImage: {
-    width: width * 0.8,
-    height: 200,
+    width: width * 1,
+    height: 400,
     borderRadius: 10,
     resizeMode: "cover",
   },

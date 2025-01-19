@@ -27,6 +27,7 @@ const ArticleScreen = ({ route, navigation }) => {
     const fetchArticle = async () => {
       try {
         const response = await api.get(`/news-details/${slug}`);
+        console.log(response.data.data);
         setArticle(response.data.data); // Simpan data artikel
         setLoading(false);
       } catch (error) {
@@ -49,11 +50,44 @@ const ArticleScreen = ({ route, navigation }) => {
   if (!article) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Article not found.</Text>
+        <Text style={styles.errorText}> Article not found. </Text>
       </View>
     );
   }
+  const ParentComponent = () => {
+    return (
+      <View style={styles.overlay}>
+        <Text style={styles.category}>
+          {article.category.name || "General"}
+        </Text>
+        <Text style={styles.title}>{article.title}</Text>
+        <FormattedDate createdAt={article.created_at} />
+      </View>
+    );
+  };
+  const FormattedDate = ({ createdAt }) => {
+    const formatDate = (dateString) => {
+      const days = [
+        "Minggu",
+        "Senin",
+        "Selasa",
+        "Rabu",
+        "Kamis",
+        "Jumat",
+        "Sabtu",
+      ];
+      const date = new Date(dateString);
 
+      const dayName = days[date.getDay()]; // Mendapatkan nama hari
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // getMonth() returns 0-based index
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${dayName}, ${day}-${month}-${year}`; // Format Hari, dd-mm-yyyy
+    };
+
+    return <Text style={styles.subtitle}>{formatDate(createdAt)}</Text>;
+  };
   // Sanitize HTML to remove unnecessary attributes or invalid structures
   const sanitizeHtml = (html) => {
     return html.replace(/style="[^"]*"/g, ""); // Hapus atribut style
@@ -83,11 +117,7 @@ const ArticleScreen = ({ route, navigation }) => {
           </View>
         </View>
         {/* Kategori dan Judul */}
-        <View style={styles.overlay}>
-          <Text style={styles.category}> {article.category || "General"} </Text>
-          <Text style={styles.title}>{article.title}</Text>
-          <Text style={styles.subtitle}>Trending • {article.date}</Text>
-        </View>
+        <ParentComponent />
       </ImageBackground>
       {/* Informasi Berita */}
       <View style={styles.content}>
@@ -98,7 +128,7 @@ const ArticleScreen = ({ route, navigation }) => {
             }}
             style={styles.sourceImage}
           />
-          <Text style={styles.sourceText}>{article.source || "Unknown"}</Text>
+          <Text style={styles.sourceText}> {article.source || "Unknown"} </Text>
         </View>
         {/* Render Konten Artikel dengan HTML */}
         <RenderHTML
@@ -148,7 +178,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
-    backgroundColor: "#007AFF",
+    backgroundColor: "#FF4C4C",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 5,

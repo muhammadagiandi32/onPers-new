@@ -1,4 +1,4 @@
-import React, { useEffect, useState }  from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,6 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null); // State untuk menyimpan data pengguna
   const [loading, setLoading] = useState(true); // State untuk indikator loading
-
 
   const handleLogout = async () => {
     try {
@@ -78,6 +77,7 @@ const ProfileScreen = ({ setIsLoggedIn }) => {
       } catch (error) {
         console.error("Error fetching user data:", error);
         Alert.alert("Error", "Failed to fetch user data.");
+        setIsLoggedIn(false);
       } finally {
         setLoading(false);
       }
