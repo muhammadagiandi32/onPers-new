@@ -17,6 +17,9 @@ const EditViewScreen = ({ navigation }) => {
   const [articles, setArticles] = useState([]); // State untuk menyimpan data artikel
   const [loading, setLoading] = useState(true); // State untuk loading
 
+  const handleBackPress = () => {
+    navigation.goBack(); // Kembali ke halaman sebelumnya
+  };
   useEffect(() => {
     const fetchArticles = async () => {
       try {
@@ -84,13 +87,13 @@ const EditViewScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* Header Section */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}> Edit Article </Text>
-          <View style={styles.timeContainer}>
+          {/* <View style={styles.timeContainer}>
             <Text style={styles.timeText}> 45 mins </Text>
-          </View>
+          </View> */}
         </View>
         {/* Subheading */}
         <Text style={styles.subheading}> List Article </Text>
