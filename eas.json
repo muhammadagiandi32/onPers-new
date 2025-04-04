@@ -12,8 +12,7 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "autoIncrement": true,
-        "gradleCommand": ":app:assembleRelease -PkotlinVersion=1.9.25"
+        "autoIncrement": true
       }
     },
     "production": {
