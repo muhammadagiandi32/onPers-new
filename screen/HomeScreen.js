@@ -21,6 +21,14 @@ LogBox.ignoreLogs([
 
 import { Ionicons, Feather } from "@expo/vector-icons";
 import api from "../src/utils/api";
+// import Constants from "expo-constants";
+// console.log("Android versionCode:", Constants.expoConfig?.android?.versionCode);
+// console.log("📦 App Info", {
+//   name: Constants.expoConfig?.name,
+//   version: Constants.expoConfig?.version,
+//   versionCode: Constants.expoConfig?.android?.versionCode,
+// });
+
 const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {

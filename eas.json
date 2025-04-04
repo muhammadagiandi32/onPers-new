@@ -9,8 +9,11 @@
       "distribution": "internal"
     },
     "preview": {
+      "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "autoIncrement": true,
+        "gradleCommand": ":app:assembleRelease -PkotlinVersion=1.9.25"
       }
     },
     "production": {

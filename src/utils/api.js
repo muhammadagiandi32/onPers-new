@@ -1,6 +1,6 @@
 import axios from "axios";
 // Periksa apakah Anda menjalankan di emulator atau perangkat fisik
-const isEmulator = true; // Set `true` jika Anda menggunakan emulator
+const isEmulator = false; // Set `true` jika Anda menggunakan emulator
 
 const api = axios.create({
   baseURL: isEmulator
