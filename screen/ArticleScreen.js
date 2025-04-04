@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   LogBox,
+  Share,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHTML from "react-native-render-html";
@@ -27,7 +28,7 @@ const ArticleScreen = ({ route, navigation }) => {
     const fetchArticle = async () => {
       try {
         const response = await api.get(`/news-details/${slug}`);
-        console.log(response.data.data);
+        // console.log(response.data.data);
         setArticle(response.data.data); // Simpan data artikel
         setLoading(false);
       } catch (error) {
@@ -92,14 +93,51 @@ const ArticleScreen = ({ route, navigation }) => {
   const sanitizeHtml = (html) => {
     return html.replace(/style="[^"]*"/g, ""); // Hapus atribut style
   };
+  const truncateHTML = (html, wordLimit = 25) => {
+    // Hapus semua tag HTML sementara untuk menghitung jumlah kata
+    const textOnly = html.replace(/<[^>]+>/g, "");
+    const words = textOnly.split(/\s+/); // Pisahkan berdasarkan spasi
+
+    // Jika jumlah kata lebih kecil dari limit, kembalikan apa adanya
+    if (words.length <= wordLimit) return html;
+
+    // Ambil hanya 25 kata pertama dan tambahkan "..."
+    const truncatedText = words.slice(0, wordLimit).join(" ");
+
+    return truncatedText; // Bungkus ulang dalam paragraf
+  };
+  const onShare = async () => {
+    if (!article) {
+      console.error("Artikel tidak tersedia untuk dibagikan.");
+      return;
+    }
+    // console.log(truncateHTML(article.content));
+    // return;
+    try {
+      const result = await Share.share({
+        message: `Baca berita ini: ${truncateHTML(article.content)}`,
+        url: `https://onpers.co.id/news-details/${article.slug}`,
+        title: article.title, // Pastikan ada properti `title`
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(`Dibagikan melalui ${result.activityType}`);
+        } else {
+          console.log("Berhasil dibagikan");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log("Berbagi dibatalkan");
+      }
+    } catch (error) {
+      console.error("Error saat berbagi:", error.message);
+    }
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header dengan Gambar Latar Belakang */}
+    <View style={{ flex: 1 }}>
       <ImageBackground
-        source={{
-          uri: article.image_url, // Gambar dari API
-        }}
+        source={{ uri: article.image_url }}
         style={styles.headerImage}
       >
         {/* Ikon Header */}
@@ -108,40 +146,40 @@ const ArticleScreen = ({ route, navigation }) => {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.rightIcons}>
-            <TouchableOpacity style={styles.icon}>
-              <Ionicons name="bookmark-outline" size={24} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.icon}>
-              <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
+            <TouchableOpacity style={styles.icon} onPress={onShare}>
+              <Ionicons name="share-outline" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
         {/* Kategori dan Judul */}
         <ParentComponent />
       </ImageBackground>
-      {/* Informasi Berita */}
-      <View style={styles.content}>
-        <View style={styles.source}>
-          <Image
+
+      <ScrollView style={styles.container}>
+        {/* Informasi Berita */}
+        <View style={styles.content}>
+          <View style={styles.source}>
+            <Image
+              source={{
+                uri: article.source_logo || "https://via.placeholder.com/50",
+              }}
+              style={styles.sourceImage}
+            />
+            <Text style={styles.sourceText}>{article.source || "Unknown"}</Text>
+          </View>
+          {/* Render Konten Artikel dengan HTML */}
+          <RenderHTML
+            contentWidth={Dimensions.get("window").width}
             source={{
-              uri: article.source_logo || "https://via.placeholder.com/50", // Logo sumber berita
+              html: sanitizeHtml(
+                article.content || "<p>No content available</p>"
+              ),
             }}
-            style={styles.sourceImage}
+            baseStyle={styles.articleText}
           />
-          <Text style={styles.sourceText}> {article.source || "Unknown"} </Text>
         </View>
-        {/* Render Konten Artikel dengan HTML */}
-        <RenderHTML
-          contentWidth={Dimensions.get("window").width}
-          source={{
-            html: sanitizeHtml(
-              article.content || "<p>No content available</p>"
-            ),
-          }}
-          baseStyle={styles.articleText}
-        />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

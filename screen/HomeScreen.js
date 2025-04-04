@@ -12,6 +12,7 @@ import {
   Dimensions,
   ScrollView,
   LogBox,
+  Modal,
 } from "react-native";
 import { Video } from "expo-av";
 LogBox.ignoreLogs([
@@ -34,6 +35,9 @@ const HomeScreen = ({ navigation }) => {
   const [BeritAcara, setBeritAcara] = useState([]);
   const [BeritaAdvertorial, setBeritaAdvertorial] = useState([]);
   const [BreakingNews, setBereakingNews] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectFotoName, setSelectFotoName] = useState(null);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -153,7 +157,7 @@ const HomeScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContainer}
         >
           {videos.map((videoUri, index) => (
-            <View key={index} style={styles.card}>
+            <View key={index}>
               <VideoCard videoUri={videoUri} />
             </View>
           ))}
@@ -320,7 +324,11 @@ const HomeScreen = ({ navigation }) => {
               { id: "6", name: "Info", icon: "information-outline" },
             ].map((category) => (
               <View key={category.id} style={styles.categoryCard}>
-                <TouchableOpacity style={styles.categoryIcon}>
+                <TouchableOpacity
+                  style={styles.categoryIcon}
+                  // onPress={() => console.log("akjsdnsjaknd")}
+                  onPress={() => navigation.navigate("CategoryMessagesScreen")}
+                >
                   <Ionicons name={category.icon} size={45} color="#EEEDED" />
                 </TouchableOpacity>
                 <Text style={styles.categoryText}>{category.name}</Text>
@@ -419,47 +427,56 @@ const HomeScreen = ({ navigation }) => {
           <ActivityIndicator size="large" color="#007AFF" />
         ) : (
           <View style={styles.section}>
-            <View style={styles.breakingNewsHeader}>
-              <Text style={styles.sectionTitle}>Acara</Text>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("ViewAllScreen", { category: "Acara" })
-                }
-              >
-                <Text style={styles.viewAll}>View all</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>Foto Acara</Text>
+
             <FlatList
-              data={BeritAcara} // Data rekomendasi
+              data={BeritAcara}
               keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 10 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.recommendationCard}
-                  onPress={() =>
-                    navigation.navigate("ArticleScreen", { slug: item.slug })
-                  }
+                  style={styles.card}
+                  onPress={() => {
+                    setSelectedImage(item.image_url);
+                    setModalVisible(true);
+                    setSelectFotoName(item.title);
+                  }}
                 >
                   <Image
                     source={{ uri: item.image_url }}
-                    style={styles.recommendationImage}
+                    style={styles.cardImage}
                   />
-                  <View style={styles.recommendationContent}>
-                    <Text style={styles.categoryTag}>{item.name}</Text>
-
-                    <Text style={styles.recommendationTitle} numberOfLines={2}>
+                  <View style={styles.cardOverlay}>
+                    <Text style={styles.cardCategory}>Foto News</Text>
+                    <Text style={styles.cardTitle} numberOfLines={2}>
                       {item.title}
-                    </Text>
-                    <Text style={styles.recommendationSubtitle}>
-                      {item.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
                     </Text>
                   </View>
                 </TouchableOpacity>
               )}
-              style={{ maxHeight: 300 }}
-              nestedScrollEnabled={true}
             />
           </View>
         )}
+        {/* MODAL untuk gambar */}
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalContainer}
+            onPress={() => setModalVisible(false)}
+            activeOpacity={1}
+          >
+            <Image source={{ uri: selectedImage }} style={styles.modalImage} />
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {selectFotoName}
+            </Text>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Advertorial Section */}
 
@@ -750,6 +767,63 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: "#fff", // Warna ikon (jika menggunakan gambar yang mendukung tintColor)
+  },
+  videoCard: {
+    width: 300,
+    height: 200,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginRight: 16,
+    backgroundColor: "#000", // atau apapun
+  },
+
+  // Foto News
+  card: {
+    width: 200,
+    height: 250,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginRight: 16,
+    backgroundColor: "#fff",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  cardOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  cardCategory: {
+    color: "#fff",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  cardTitle: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalImage: {
+    width: "90%",
+    height: "70%",
+    resizeMode: "contain",
+    borderRadius: 16,
   },
 });
 

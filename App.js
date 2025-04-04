@@ -17,6 +17,9 @@ import RegisterScreen from "./screen/RegisterScreen";
 import ViewAllScreen from "./screen/ViewAllScreen";
 import EditArticleScreen from "./screen/EditArticleScreen";
 import EditViewScreen from "./screen/EditViewScreen";
+import ShortsScreen from "./screen/ShortsScreen";
+import CategoryMessagesScreen from "./screen/CategoryMessagesScreen";
+import FotoScreen from "./screen/FotoScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +39,11 @@ function HomeStack() {
         options={{ title: "Article", headerShown: false }}
       />
       <Stack.Screen
+        name="FotoScreen"
+        component={FotoScreen}
+        options={{ title: "Foto", headerShown: false }}
+      />
+      <Stack.Screen
         name="ViewAllScreen"
         component={ViewAllScreen}
         options={{ headerShown: false }}
@@ -45,18 +53,15 @@ function HomeStack() {
         component={EditArticleScreen}
         options={{ headerShown: false }}
       />
-    </Stack.Navigator>
-  );
-}
-
-// Profile Stack Navigator
-function ProfileStack() {
-  return (
-    <Stack.Navigator>
       <Stack.Screen
-        name="ProfileScreen"
-        component={ProfileScreen}
-        options={{ title: "Profile", headerShown: false }}
+        name="CategoryMessagesScreen"
+        component={CategoryMessagesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChatScreen"
+        component={ChatScreen}
+        options={{ title: "Chat", headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -198,6 +203,11 @@ export default function App() {
             children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
             options={{ headerShown: false }}
           />
+          {/* <Tab.Screen
+            name="Shorts"
+            children={() => <ShortsScreen setIsLoggedIn={setIsLoggedIn} />}
+            options={{ headerShown: false }}
+          /> */}
         </Tab.Navigator>
       ) : (
         <Stack.Navigator>

@@ -14,87 +14,93 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../src/utils/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ChatScreen = ({ route, navigation }) => {
   const { email, name, to } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const scrollViewRef = useRef(null);
-  const socket = useRef(null);
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await api.get(`/messages/${email}/${to}`);
-        const sortedMessages = Array.isArray(response.data.data)
-          ? response.data.data.sort(
-              (a, b) => new Date(a.created_at) - new Date(b.created_at)
-            )
-          : [];
-        setMessages((prevMessages) => {
-          // Periksa apakah ada perubahan pada pesan
-          if (JSON.stringify(prevMessages) !== JSON.stringify(sortedMessages)) {
-            scrollViewRef.current?.scrollToEnd({ animated: true });
-            return sortedMessages;
-          }
-          return prevMessages;
-        });
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
-
-    // Panggil fetchMessages pertama kali
-    fetchMessages();
-
-    // Set interval untuk polling
-    const interval = setInterval(fetchMessages, 3000); // Setiap 3 detik
-
-    // Bersihkan interval saat komponen unmount
-    return () => clearInterval(interval);
-  }, [email, to]);
+  const [emailUser, setEmailUser] = useState(""); // Simpan email user yang login
 
   const fetchMessages = async () => {
     try {
-      const response = await api.get(`/messages/${email}/${to}`);
+      const token = await AsyncStorage.getItem("access_token");
+
+      const dataEmail = await api.get("/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const dataEmailUser = dataEmail.data.user.email;
+      setEmailUser(dataEmailUser); // Simpan email user di state
+
+      // Gunakan dataEmailUser (bukan emailUser yang belum diperbarui)
+      const response = await api.get(`/messages/${dataEmailUser}/${email}`);
       const sortedMessages = Array.isArray(response.data.data)
         ? response.data.data.sort(
             (a, b) => new Date(a.created_at) - new Date(b.created_at)
           )
         : [];
-      setMessages(sortedMessages);
+
+      setMessages((prevMessages) => {
+        if (JSON.stringify(prevMessages) !== JSON.stringify(sortedMessages)) {
+          return sortedMessages;
+        }
+        return prevMessages;
+      });
     } catch (error) {
       console.error("Error fetching messages:", error);
       setMessages([]);
     }
   };
+
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [email, to]);
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
     try {
+      const token = await AsyncStorage.getItem("access_token");
+
+      // Ambil email user yang sedang login
+      const userResponse = await api.get("/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const senderEmail = userResponse.data.user.email; // Email pengguna login
+
       const messageData = {
-        sender: email,
-        to: to,
+        sender: senderEmail, // Menggunakan sender_email sesuai backend
+        to: email, // Kirim ke email tujuan
         message: newMessage,
       };
 
-      // Kirim pesan ke server via REST API
-      await api.post("/messages/post", messageData);
+      await api.post("/messages/post", messageData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // Tambahkan pesan lokal
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           ...messageData,
-          sender_email: email,
           id: Math.random().toString(),
           created_at: new Date().toISOString(),
         },
       ]);
 
       setNewMessage("");
-      scrollViewRef.current?.scrollToEnd({ animated: true });
     } catch (error) {
-      console.error("Error sending message", error);
+      console.error("Error sending message", error.response?.data || error);
     }
   };
 
@@ -103,14 +109,12 @@ const ChatScreen = ({ route, navigation }) => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 1 : 80} // Offset untuk Android
+        keyboardVerticalOffset={Platform.OS === "ios" ? 1 : 80}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.container}>
             <View style={styles.header}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("MessagesScreen")}
-              >
+              <TouchableOpacity onPress={() => navigation.goBack()}>
                 <Ionicons name="arrow-back" size={24} color="#007AFF" />
               </TouchableOpacity>
               <View style={styles.headerContent}>
@@ -121,19 +125,17 @@ const ChatScreen = ({ route, navigation }) => {
                 <Ionicons name="call" size={24} color="#007AFF" />
               </TouchableOpacity>
             </View>
+
             <ScrollView
               ref={scrollViewRef}
               contentContainerStyle={styles.chatContent}
-              onContentSizeChange={() =>
-                scrollViewRef.current?.scrollToEnd({ animated: true })
-              }
             >
               {messages.map((message, index) => (
                 <View
                   key={message.id || index}
                   style={[
                     styles.messageBubble,
-                    message.sender === email ? styles.you : styles.other,
+                    message.sender === emailUser ? styles.you : styles.other, // Perbaikan disini
                   ]}
                 >
                   <Text style={styles.messageText}>{message.message}</Text>
@@ -143,6 +145,7 @@ const ChatScreen = ({ route, navigation }) => {
                 </View>
               ))}
             </ScrollView>
+
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
@@ -215,11 +218,6 @@ const styles = StyleSheet.create({
     color: "#ccc",
     marginTop: 5,
     alignSelf: "flex-end",
-  },
-  noMessages: {
-    textAlign: "center",
-    color: "#888",
-    marginTop: 20,
   },
   inputContainer: {
     flexDirection: "row",
