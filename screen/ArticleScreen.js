@@ -20,106 +20,64 @@ import api from "../src/utils/api";
 LogBox.ignoreLogs(["Support for defaultProps will be removed"]);
 
 const ArticleScreen = ({ route, navigation }) => {
-  const { slug } = route.params; // Terima parameter slug
+  const { slug } = route.params;
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // --- helpers ---
+  const sanitizeHtml = (html) =>
+    html ? html.replace(/style="[^"]*"/g, "") : "";
+  const truncateHTML = (html, wordLimit = 25) => {
+    if (!html) return "";
+    const textOnly = html.replace(/<[^>]+>/g, "");
+    const words = textOnly.trim().split(/\s+/);
+    if (words.length <= wordLimit) return textOnly;
+    return words.slice(0, wordLimit).join(" ");
+  };
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const days = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+    ];
+    const d = new Date(dateString);
+    if (isNaN(d)) return "";
+    const dayName = days[d.getDay()];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${dayName}, ${day}-${month}-${year}`;
+  };
 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await api.get(`/news-details/${slug}`);
-        // console.log(response.data.data);
-        setArticle(response.data.data); // Simpan data artikel
-        setLoading(false);
+        const { data } = await api.get(`/news-details/${slug}`);
+        setArticle(data?.data ?? null);
+        console.log(data?.data);
       } catch (error) {
         console.error("Error fetching article:", error);
+        setArticle(null);
+      } finally {
         setLoading(false);
       }
     };
-
     fetchArticle();
   }, [slug]);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
-
-  if (!article) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}> Article not found. </Text>
-      </View>
-    );
-  }
-  const ParentComponent = () => {
-    return (
-      <View style={styles.overlay}>
-        <Text style={styles.category}>
-          {article.category.name || "General"}
-        </Text>
-        <Text style={styles.title}>{article.title}</Text>
-        <FormattedDate createdAt={article.created_at} />
-      </View>
-    );
-  };
-  const FormattedDate = ({ createdAt }) => {
-    const formatDate = (dateString) => {
-      const days = [
-        "Minggu",
-        "Senin",
-        "Selasa",
-        "Rabu",
-        "Kamis",
-        "Jumat",
-        "Sabtu",
-      ];
-      const date = new Date(dateString);
-
-      const dayName = days[date.getDay()]; // Mendapatkan nama hari
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // getMonth() returns 0-based index
-      const day = String(date.getDate()).padStart(2, "0");
-
-      return `${dayName}, ${day}-${month}-${year}`; // Format Hari, dd-mm-yyyy
-    };
-
-    return <Text style={styles.subtitle}>{formatDate(createdAt)}</Text>;
-  };
-  // Sanitize HTML to remove unnecessary attributes or invalid structures
-  const sanitizeHtml = (html) => {
-    return html.replace(/style="[^"]*"/g, ""); // Hapus atribut style
-  };
-  const truncateHTML = (html, wordLimit = 25) => {
-    // Hapus semua tag HTML sementara untuk menghitung jumlah kata
-    const textOnly = html.replace(/<[^>]+>/g, "");
-    const words = textOnly.split(/\s+/); // Pisahkan berdasarkan spasi
-
-    // Jika jumlah kata lebih kecil dari limit, kembalikan apa adanya
-    if (words.length <= wordLimit) return html;
-
-    // Ambil hanya 25 kata pertama dan tambahkan "..."
-    const truncatedText = words.slice(0, wordLimit).join(" ");
-
-    return truncatedText; // Bungkus ulang dalam paragraf
-  };
   const onShare = async () => {
-    if (!article) {
-      console.error("Artikel tidak tersedia untuk dibagikan.");
-      return;
-    }
-    // console.log(truncateHTML(article.content));
-    // return;
+    if (!article) return;
     try {
       const result = await Share.share({
         message: `Baca berita ini: ${truncateHTML(article.content)}`,
         url: `https://onpers.co.id/news-details/${article.slug}`,
-        title: article.title, // Pastikan ada properti `title`
+        title: article.title,
       });
-
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
           console.log(`Dibagikan melalui ${result.activityType}`);
@@ -130,16 +88,39 @@ const ArticleScreen = ({ route, navigation }) => {
         console.log("Berbagi dibatalkan");
       }
     } catch (error) {
-      console.error("Error saat berbagi:", error.message);
+      console.error("Error saat berbagi:", error?.message);
     }
   };
 
+  if (loading || !article) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  // nilai aman untuk UI
+  const headerImage =
+    article?.image_url ?? "https://via.placeholder.com/800x300";
+  const categoryName = article?.category?.name ?? "General"; // category mungkin tidak ada
+  const authorName = article?.author?.name ?? article?.author_name ?? "Unknown";
+  const createdOrPublished =
+    article?.published_at ?? article?.created_at ?? null;
+
+  const ParentComponent = () => (
+    <View style={styles.overlay}>
+      <Text style={styles.category}>{categoryName}</Text>
+      <Text style={styles.title}>{article?.title ?? ""}</Text>
+      {createdOrPublished ? (
+        <Text style={styles.subtitle}>{formatDate(createdOrPublished)}</Text>
+      ) : null}
+    </View>
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      <ImageBackground
-        source={{ uri: article.image_url }}
-        style={styles.headerImage}
-      >
+      <ImageBackground source={{ uri: headerImage }} style={styles.headerImage}>
         {/* Ikon Header */}
         <View style={styles.headerIcons}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -161,18 +142,19 @@ const ArticleScreen = ({ route, navigation }) => {
           <View style={styles.source}>
             <Image
               source={{
-                uri: article.source_logo || "https://via.placeholder.com/50",
+                uri: article?.source_logo || "https://via.placeholder.com/50",
               }}
               style={styles.sourceImage}
             />
-            <Text style={styles.sourceText}>{article.source || "Unknown"}</Text>
+            <Text style={styles.sourceText}>{authorName}</Text>
           </View>
+
           {/* Render Konten Artikel dengan HTML */}
           <RenderHTML
             contentWidth={Dimensions.get("window").width}
             source={{
               html: sanitizeHtml(
-                article.content || "<p>No content available</p>"
+                article?.content ?? "<p>No content available</p>"
               ),
             }}
             baseStyle={styles.articleText}
@@ -184,15 +166,8 @@ const ArticleScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  headerImage: {
-    width: "100%",
-    height: 300,
-    justifyContent: "flex-end",
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
+  headerImage: { width: "100%", height: 300, justifyContent: "flex-end" },
   headerIcons: {
     position: "absolute",
     top: 40,
@@ -202,16 +177,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  rightIcons: {
-    flexDirection: "row",
-  },
-  icon: {
-    marginLeft: 20,
-  },
-  overlay: {
-    padding: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
+  rightIcons: { flexDirection: "row" },
+  icon: { marginLeft: 20 },
+  overlay: { padding: 20, backgroundColor: "rgba(0, 0, 0, 0.4)" },
   category: {
     color: "#fff",
     fontSize: 14,
@@ -223,53 +191,16 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 10,
   },
-  title: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  subtitle: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  content: {
-    padding: 20,
-  },
-  source: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  sourceImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  sourceText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  articleText: {
-    fontSize: 16,
-    color: "#333",
-    lineHeight: 24,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 18,
-    color: "#f00",
-  },
+  title: { color: "#fff", fontSize: 24, fontWeight: "bold", marginBottom: 5 },
+  subtitle: { color: "#fff", fontSize: 14 },
+  content: { padding: 20 },
+  source: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
+  sourceImage: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
+  sourceText: { fontSize: 16, fontWeight: "bold" },
+  articleText: { fontSize: 16, color: "#333", lineHeight: 24 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: { fontSize: 18, color: "#f00" },
 });
 
 export default ArticleScreen;
