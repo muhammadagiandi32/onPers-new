@@ -20,6 +20,7 @@ import EditViewScreen from "./screen/EditViewScreen";
 import ShortsScreen from "./screen/ShortsScreen";
 import CategoryMessagesScreen from "./screen/CategoryMessagesScreen";
 import FotoScreen from "./screen/FotoScreen";
+import RedaksiScreen from "./screen/RedaksiScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,37 +32,63 @@ function HomeStack() {
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
-        options={{ title: "Home", headerShown: false }}
+        options={{
+          title: "Home",
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="ArticleScreen"
         component={ArticleScreen}
-        options={{ title: "Article", headerShown: false }}
+        options={{
+          title: "Article",
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="FotoScreen"
         component={FotoScreen}
-        options={{ title: "Foto", headerShown: false }}
+        options={{
+          title: "Foto",
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="ViewAllScreen"
         component={ViewAllScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="EditArticleScreen"
         component={EditArticleScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="CategoryMessagesScreen"
         component={CategoryMessagesScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
-        options={{ title: "Chat", headerShown: false }}
+        options={{
+          title: "Chat",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RedaksiScreen"
+        component={RedaksiScreen}
+        options={{
+          title: "Redaksi & Penulis",
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );
@@ -74,12 +101,18 @@ function MessagesStack() {
       <Stack.Screen
         name="MessagesScreen"
         component={MessagesScreen}
-        options={{ title: "Messages", headerShown: false }}
+        options={{
+          title: "Messages",
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
-        options={{ title: "Chat", headerShown: false }}
+        options={{
+          title: "Chat",
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );
@@ -92,7 +125,10 @@ function CreateArticleStack() {
       <Stack.Screen
         name="CreateArtickeScreen"
         component={CreateArticleScreen}
-        options={{ title: "Create", headerShown: false }}
+        options={{
+          title: "Create",
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );
@@ -118,9 +154,15 @@ export default function App() {
   // Tampilkan layar loading sementara memeriksa status login
   if (isLoggedIn === null) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text>Loading...</Text>
+        <Text> Loading... </Text>
       </View>
     );
   }
@@ -157,12 +199,16 @@ export default function App() {
           <Tab.Screen
             name="Home"
             component={HomeStack}
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Tab.Screen
             name="Messages"
             component={MessagesStack} // Gunakan MessagesStack
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Tab.Screen
             name="CreateArticle"
@@ -181,7 +227,10 @@ export default function App() {
                     height: 50, // Tinggi lingkaran tombol
                     width: 50, // Lebar lingkaran tombol
                     shadowColor: "#000", // Warna bayangan
-                    shadowOffset: { width: 0, height: 10 }, // Posisi bayangan
+                    shadowOffset: {
+                      width: 0,
+                      height: 10,
+                    }, // Posisi bayangan
                     shadowOpacity: 4, // Transparansi bayangan
                     shadowRadius: 3, // Jangkauan bayangan
                     elevation: 3, // Bayangan untuk Android
@@ -196,16 +245,25 @@ export default function App() {
           <Tab.Screen
             name="Edit"
             component={EditViewScreen} // Gunakan EditArticleStack
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Tab.Screen
             name="Profile"
             children={() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           {/* <Tab.Screen
-            name="Shorts"
-            children={() => <ShortsScreen setIsLoggedIn={setIsLoggedIn} />}
+                      name="Shorts"
+                      children={() => <ShortsScreen setIsLoggedIn={setIsLoggedIn} />}
+                      options={{ headerShown: false }}
+                    /> */}
+          {/* <Tab.Screen
+            name="RedaksiScreen"
+            children={() => <RedaksiScreen setIsLoggedIn={setIsLoggedIn} />}
             options={{ headerShown: false }}
           /> */}
         </Tab.Navigator>
@@ -215,12 +273,16 @@ export default function App() {
           <Stack.Screen
             name="Login"
             children={() => <LoginScreen setIsLoggedIn={setIsLoggedIn} />}
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="RegisterScreen"
             component={RegisterScreen}
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
         </Stack.Navigator>
       )}

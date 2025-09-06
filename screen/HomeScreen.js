@@ -334,8 +334,13 @@ const HomeScreen = ({ navigation }) => {
               <View key={category.id} style={styles.categoryCard}>
                 <TouchableOpacity
                   style={styles.categoryIcon}
-                  // onPress={() => console.log("akjsdnsjaknd")}
-                  onPress={() => navigation.navigate("CategoryMessagesScreen")}
+                  onPress={() =>
+                    category.name === "Info"
+                      ? navigation.navigate("RedaksiScreen")
+                      : navigation.navigate("CategoryMessagesScreen", {
+                          category,
+                        })
+                  }
                 >
                   <Ionicons name={category.icon} size={45} color="#EEEDED" />
                 </TouchableOpacity>
